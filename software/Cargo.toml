@@ -1,5 +1,5 @@
 [package]
-name = "software"
+name = "home_assist_main"
 version = "0.1.0"
 edition = "2024"
 publish = false
@@ -9,3 +9,4 @@ name = "home_assist"
 path = "src/main.rs"
 
 [dependencies]
+rppal = "0.22.1"
