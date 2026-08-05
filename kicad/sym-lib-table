@@ -1,0 +1,3 @@
+(sym_lib_table
+  (lib (name "RBPiZero")(type "Legacy")(uri "${KIPRJMOD}/PiZeroWLib.pretty/RBPiZero.lib")(options "")(descr ""))
+)

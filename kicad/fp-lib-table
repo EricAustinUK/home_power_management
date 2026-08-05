@@ -1,0 +1,3 @@
+(fp_lib_table
+  (lib (name "PiZeroWLib")(type "KiCad")(uri "${KIPRJMOD}/PiZeroWLib.pretty")(options "")(descr ""))
+)

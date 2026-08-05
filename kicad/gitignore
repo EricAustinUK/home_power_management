@@ -1,0 +1,14 @@
+*.kicad_prl
+*.bak
+*-bak
+*-bak[0-9]*
+*.bck
+*_old
+*.lck
+fp-info-cache
+/kicad-backups/
+/plots/
+/gerber/
+*.pdf
+*.drl
+*.gbr
