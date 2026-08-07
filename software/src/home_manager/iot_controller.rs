@@ -1,9 +1,15 @@
 use std::time::{Instant};
 use url::Url;
 
+
+pub const BATTERY_URL: &str = "https://api.example.com/";
+pub const EV_URL: &str = "https://api.example.com/";
+pub const EV_CHARGER_URL: &str = "https://api.example.com/";
+pub const WEATHER_API_URL: &str = "https://api.example.com/";
+
 #[derive(Clone)]
 pub struct WeatherData{
-    
+
 }
 
 pub struct IoTController{
