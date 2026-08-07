@@ -1,8 +1,9 @@
+mod home_manager;
+
 use rppal::gpio::{Gpio, InputPin, OutputPin, Trigger};
-use std::{sync::{Mutex, atomic::{AtomicBool, AtomicUsize, Ordering}}};
-use std::time::{Instant, Duration};
-use either::{Either, Left, Right};
-use url::Url;
+use std::{sync::{Mutex, atomic::{AtomicBool, Ordering}}};
+use std::time::{Duration};
+use home_manager::{HomeManager, WeatherData};
 
 pub const BATTERY_URL: &str = "https://api.example.com/";
 pub const EV_URL: &str = "https://api.example.com/";
@@ -16,23 +17,8 @@ struct PanelState {
     leds: Mutex<Option<[OutputPin; 3]>>,
 }
 
-struct HomeManager{
-    grid_cap_wh:usize,
-    soc_est_wh:usize, 
-    exp_solar_prod_wh:AtomicUsize,
-    exp_house_usg_wh:AtomicUsize,
-}
 
-#[derive(Clone)]
-struct WeatherData{
 
-}
-
-struct IoTController{
-    soc_perc:(u8, Instant),
-    ev_perc:(u8, Instant),
-    weather_data:(WeatherData, Instant)
-}
 
 impl PanelState{
     const fn new () -> Self{
@@ -76,88 +62,7 @@ impl PanelState{
 
 }
 
-impl HomeManager{
-    const fn new() -> Result<Self, reqwest::Error> {
-        Ok(Self { grid_cap_wh:3840, soc_est_wh:0, exp_solar_prod_wh:AtomicUsize::new(0) , exp_house_usg_wh:AtomicUsize::new(6000) })
-    }
-}
 
-impl IoTController{
-    fn new() -> Result<Self, Either<url::ParseError, reqwest::Error>> {
-        let soc_perc:(u8, Instant) = match IoTController::fetch_soc_perc() {
-            Ok(pc) => pc,
-            Err(e) => return Err(Right(e))
-        };
-
-        let ev_perc:(u8, Instant) = match IoTController::fetch_ev_perc() {
-            Ok(pc) => pc,
-            Err(e) => return Err(Right(e))
-        };
-
-        let weather:(WeatherData, Instant) = match IoTController::fetch_weather_data() {
-            Ok(data) => data,
-            Err(e) => return Err(Right(e))
-        };
-
-        Ok(Self { soc_perc:soc_perc, ev_perc:ev_perc, weather_data:weather })
-    }
-
-    fn get_ev_perc(&mut self, min_cache:Option<Instant>) -> Result<u8, reqwest::Error>{
-        let ret = match min_cache {
-            Some(min) => match min < self.ev_perc.1 {
-                true => Ok(self.ev_perc.0),
-                false => Ok(IoTController::fetch_ev_perc()?.0)
-            },
-            None => Ok(IoTController::fetch_ev_perc()?.0)
-        };
-
-        let val = ret?;
-        
-        self.ev_perc = (val, Instant::now());
-        return Ok(val);
-    }
-
-    fn get_soc_perc(&mut self, min_cache:Option<Instant>) -> Result<u8, reqwest::Error>{
-        let ret = match min_cache {
-            Some(min) => match min < self.soc_perc.1 {
-                true => Ok(self.soc_perc.0),
-                false => Ok(IoTController::fetch_soc_perc()?.0)
-            },
-            None => Ok(IoTController::fetch_soc_perc()?.0)
-        };
-
-        let val = ret?;
-
-        self.soc_perc = (val, Instant::now());
-        return Ok(val);
-    }
-
-    fn get_weather_data(&mut self, min_cache:Option<Instant>) -> Result<&WeatherData, reqwest::Error>{
-        let ret = match min_cache {
-            Some(min) => match min < self.weather_data.1 {
-                true => Ok(self.weather_data.0.clone()),
-                false => Ok(IoTController::fetch_weather_data()?.0)
-            },
-            None => Ok(IoTController::fetch_weather_data()?.0)
-        };
-
-        self.weather_data = (ret?, Instant::now());
-        return Ok(&self.weather_data.0);
-    }
-
-    fn fetch_ev_perc() -> Result<(u8, Instant), reqwest::Error>{
-        Ok((67, Instant::now()))
-    } 
-
-    fn fetch_soc_perc() -> Result<(u8, Instant), reqwest::Error>{
-        Ok((67, Instant::now()))
-    }
-
-    fn fetch_weather_data() -> Result<(WeatherData, Instant), reqwest::Error>{
-        Ok((WeatherData {}, Instant::now()))
-    }
-
-}
 
 static CONTROL_PANEL: PanelState = PanelState::new();
 
