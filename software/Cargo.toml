@@ -10,9 +10,9 @@ path = "src/main.rs"
 
 [dependencies]
 rppal = "0.22.1"
-reqwest = { version = "0.13", features = ["json"] }
-serde = { version = "1.0", features = ["derive"] }
+serde = { version="1.0", features=["derive"] }
 either = "1.17.0"
 url = "2.5.8"
 thiserror = "2.0.20"
 dotenvy = "0.15.7"
+ureq = { version="3.4.0", features=["json"] }

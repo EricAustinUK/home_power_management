@@ -4,8 +4,8 @@ use std::{thread::sleep, time::Duration};
 
 use home_manager::{HomeManager, InitError};
 
-pub const INIT_ATTEMPTS:u8 = 5;
-pub const ATTEMPT_DELAY_S:u64 = 60;
+const INIT_ATTEMPTS:u8 = 5;
+const ATTEMPT_DELAY_S:u64 = 60;
 
 fn main() -> Result<(), Box<dyn std::error::Error>>{
     let home_manager = match  HomeManager::new() {
