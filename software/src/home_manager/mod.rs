@@ -6,8 +6,18 @@ use control_panel::PanelState;
 use std::sync::{Arc, atomic::AtomicUsize};
 use rppal::gpio::{InputPin, Trigger};
 use std::time::Duration;
+use thiserror::Error;
 
 use crate::home_manager::iot_controller::IoTController;
+
+#[derive(Debug, Error)]
+pub enum InitError {
+    #[error("Network error: {0}")]
+    Endpoint(#[from] reqwest::Error),
+    
+    #[error("GPIO error: {0}")]
+    Io(#[from] rppal::gpio::Error),
+}
 
 pub struct HomeManager{
     grid_cap_wh:usize,
@@ -20,7 +30,7 @@ pub struct HomeManager{
 }
 
 impl HomeManager{
-    pub fn new() -> Result<Self, Box<dyn std::error::Error>> {
+    pub fn new() -> Result<Self, InitError> {
     let panel = Arc::new(PanelState::new()?);
 
     let tgl_pins: Vec<InputPin> = [11, 12, 13]

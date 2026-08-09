@@ -1,6 +1,5 @@
-use rppal::gpio::{Gpio, InputPin, Mode::Input, OutputPin, Trigger};
-use std::{sync::{Mutex, atomic::{AtomicBool, Ordering}}, vec};
-use std::time::{Duration};
+use rppal::gpio::{Gpio, OutputPin};
+use std::{sync::{Mutex, atomic::{AtomicBool, Ordering}}};
 
 pub struct PanelState {
     app_1: AtomicBool,
@@ -11,9 +10,9 @@ pub struct PanelState {
 }
 
 impl PanelState{
-    pub fn new () -> Result<Self, Box<dyn std::error::Error>>{
+    pub fn new () -> Result<Self, rppal::gpio::Error>{
         let panel:PanelState = Self { app_1: AtomicBool::new(false), app_2: AtomicBool::new(false), app_3: AtomicBool::new(false), leds: Mutex::new(None), gpio:Gpio::new()? };
-        panel.init_leds();
+        panel.init_leds()?;
         Ok(panel)
     }
 
