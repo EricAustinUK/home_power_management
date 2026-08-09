@@ -21,7 +21,7 @@
         {
             "type": "shell",
             "dependsOn": "build software layer",
-            "command": "set -a && source ../.env && set +a && scp target/arm-unknown-linux-musleabihf/release/home_assist $PI_USER@$PI_HOST:~$PI_USER/ && ssh $PI_USER@$PI_HOST \"chmod +x ~$PI_USER/home_assist\"",
+            "command": "set -a && source ../.env && set +a && scp target/arm-unknown-linux-musleabihf/release/home_assist ../.env $PI_USER@$PI_HOST:~$PI_USER/ && ssh $PI_USER@$PI_HOST \"chmod +x ~$PI_USER/home_assist\"",
             "options": {
                 "cwd": "${workspaceFolder}/software"
             },

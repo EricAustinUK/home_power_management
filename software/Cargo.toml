@@ -15,3 +15,4 @@ serde = { version = "1.0", features = ["derive"] }
 either = "1.17.0"
 url = "2.5.8"
 thiserror = "2.0.20"
+dotenvy = "0.15.7"
