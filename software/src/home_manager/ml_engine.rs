@@ -14,6 +14,30 @@ pub enum MLError {
     
 }
 
+struct Features{
+    features:[[f64;7];24]
+}
+
+impl TryFrom<WeatherData> for Features{
+    type Error = WeatherDataError;
+    fn try_from(weather: WeatherData) -> Result<Self, Self::Error> {
+        let feature_arrs = weather.hourly;
+        let mut result = Self{ features:[[0.; 7];24] };
+        for i in 0..24{
+            *result.features.get_mut(i).ok_or(WeatherDataError::DataOverflow())? = [
+                    (*feature_arrs.hour_sin.get(i).ok_or(WeatherDataError::FloatConversion())? as f64),
+                    (*feature_arrs.hour_cos.get(i).ok_or(WeatherDataError::FloatConversion())? as f64),
+                    (*feature_arrs.shortwave_radiation.get(i).ok_or(WeatherDataError::FloatConversion())? as f64),
+                    (*feature_arrs.direct_radiation.get(i).ok_or(WeatherDataError::FloatConversion())? as f64),
+                    (*feature_arrs.diffuse_radiation.get(i).ok_or(WeatherDataError::FloatConversion())? as f64),
+                    (*feature_arrs.cloud_cover.get(i).ok_or(WeatherDataError::FloatConversion())? as f64),
+                    (*feature_arrs.temperature_2m.get(i).ok_or(WeatherDataError::FloatConversion())? as f64)
+            ];
+        }
+        Ok(result)
+    }
+}
+
 pub struct MLEngine{
     model:RegressionPipeline<StandardScaler, LinearRegression>
 }
@@ -38,23 +62,19 @@ impl MLEngine{
 
     pub fn infer(&self, weather:WeatherData) -> Result<[f64; 24], MLError> {
         let mut result_arr:[f64; 24] = [0.; 24];
-        let feature_arrs = weather.hourly;
+        let features:Features = weather.try_into()?;
         for i in 0..24{
-            let result = self.model.predict(&[
-                (*feature_arrs.hour_sin.get(i).ok_or(WeatherDataError::FloatConversion())? as f64),
-                (*feature_arrs.hour_cos.get(i).ok_or(WeatherDataError::FloatConversion())? as f64),
-                (*feature_arrs.shortwave_radiation.get(i).ok_or(WeatherDataError::FloatConversion())? as f64),
-                (*feature_arrs.direct_radiation.get(i).ok_or(WeatherDataError::FloatConversion())? as f64),
-                (*feature_arrs.diffuse_radiation.get(i).ok_or(WeatherDataError::FloatConversion())? as f64),
-                (*feature_arrs.cloud_cover.get(i).ok_or(WeatherDataError::FloatConversion())? as f64),
-                (*feature_arrs.temperature_2m.get(i).ok_or(WeatherDataError::FloatConversion())? as f64)
-            ])?;
+            let result = self.model.predict(features.features.get(i).ok_or(WeatherDataError::DataOverflow())?)?;
             *result_arr.get_mut(i).ok_or(WeatherDataError::DataOverflow())? = result;
         }
         Ok(result_arr)
     }
 
-    pub fn train(&self, real_weather:WeatherData, real_solar:[f64; 24]) -> Result<(), MLError>{
+    pub fn train(&mut self, real_weather:WeatherData, real_solar:[f64; 24]) -> Result<(), MLError>{
+        let features:Features = real_weather.try_into()?;
+        for i in 0..24{
+            self.model.learn(&features.features[i], real_solar[i])?;
+        }
         Ok(())
     }
 }
