@@ -28,44 +28,8 @@ pub enum MLError {
     FileReadError(#[from] std::io::Error)
 }
 
-struct Features{
-    features:[[f64;7];24]
-}
-
-impl TryFrom<WeatherData> for Features{
-    type Error = WeatherDataError;
-    fn try_from(weather: WeatherData) -> Result<Self, Self::Error> {
-        let feature_arrs = weather.hourly;
-
-        let mut hour_sin:[f32; 24] = [0.; 24];
-        let mut hour_cos:[f32; 24] = [0.; 24];
-
-        for i in 0..24 {
-            let time = &feature_arrs.time[i];
-            let hour_str = time.get(11..13).ok_or(WeatherDataError::DateConversion())?;
-            let hour:f32 = match hour_str.parse(){
-                Ok(h) => h,
-                Err(_) => return Err(WeatherDataError::DateConversion())
-            };
-            let angle:f32 = 2.0 * std::f32::consts::PI * hour / 24.0;
-
-            *hour_sin.get_mut(i).ok_or(WeatherDataError::DataOverflow())? = angle.sin();
-            *hour_cos.get_mut(i).ok_or(WeatherDataError::DataOverflow())? = angle.cos();
-        }
-        let mut result = Self{ features:[[0.; 7];24] };
-        for i in 0..24{
-            *result.features.get_mut(i).ok_or(WeatherDataError::DataOverflow())? = [
-                    (*hour_sin.get(i).ok_or(WeatherDataError::FloatConversion())? as f64),
-                    (*hour_cos.get(i).ok_or(WeatherDataError::FloatConversion())? as f64),
-                    (*feature_arrs.shortwave_radiation.get(i).ok_or(WeatherDataError::FloatConversion())? as f64),
-                    (*feature_arrs.direct_radiation.get(i).ok_or(WeatherDataError::FloatConversion())? as f64),
-                    (*feature_arrs.diffuse_radiation.get(i).ok_or(WeatherDataError::FloatConversion())? as f64),
-                    (*feature_arrs.cloud_cover.get(i).ok_or(WeatherDataError::FloatConversion())? as f64),
-                    (*feature_arrs.temperature_2m.get(i).ok_or(WeatherDataError::FloatConversion())? as f64)
-            ];
-        }
-        Ok(result)
-    }
+pub struct WeatherFeatures{
+    pub features:[[f64;7];24]
 }
 
 type Model = RegressionPipeline<StandardScaler, LinearRegression>;
@@ -99,7 +63,7 @@ impl MLEngine{
 
     pub fn infer(&self, weather:WeatherData) -> Result<[f64; 24], MLError> {
         let mut result_arr:[f64; 24] = [0.; 24];
-        let features:Features = weather.try_into()?;
+        let features:WeatherFeatures = weather.try_into()?;
         for i in 0..24{
             let result = self.model.predict(features.features.get(i).ok_or(WeatherDataError::DataOverflow())?)?;
             *result_arr.get_mut(i).ok_or(WeatherDataError::DataOverflow())? = result;
@@ -108,7 +72,7 @@ impl MLEngine{
     }
 
     pub fn train(&mut self, real_weather:WeatherData, real_solar:[f64; 24]) -> Result<(), MLError>{
-        let features:Features = real_weather.try_into()?;
+        let features:WeatherFeatures = real_weather.try_into()?;
         for i in 0..24{
             self.model.learn(&features.features[i], real_solar[i])?;
         }
