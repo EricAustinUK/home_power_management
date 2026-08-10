@@ -99,7 +99,7 @@ impl HomeManager{
             })
     }
 
-    pub fn train(&self) -> Result<(), HomeManagerError>{
+    pub fn train(&mut self) -> Result<(), HomeManagerError>{
         let real_weather_data = self.iot_controller.fetch_prev_weather_data()?;
         let real_solar_data: [f64; 24] = std::array::from_fn(|i| {
             self.real_solar_prod_wh[i].load(Ordering::Relaxed) as f64
