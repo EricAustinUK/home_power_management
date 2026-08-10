@@ -2,7 +2,7 @@ use std::time::Instant;
 use thiserror::Error;
 use ureq::{Agent, http::Uri};
 use time::{Duration};
-pub use crate::home_manager::weather_data::{WeatherData, RawWeatherData, WeatherDataError};
+pub use crate::home_manager::weather_data::{WeatherData, WeatherDataError};
 
 #[derive(Debug, Error)]
 pub enum IoTError {
@@ -117,11 +117,11 @@ impl IoTController{
         .query("timezone", "Europe/London")
         .call()?;
 
-        let raw_weather_data:RawWeatherData = response.into_body().read_json()?;
+        let weather_data:WeatherData = response.into_body().read_json()?;
 
-        println!("Successfully retrieved {} hours of weather data.", raw_weather_data.hourly.time.iter().count());
+        println!("Successfully retrieved {} hours of weather data.", weather_data.hourly.time.iter().count());
 
-        Ok((WeatherData {hourly:raw_weather_data.hourly.try_into()? }, Instant::now()))
+        Ok((weather_data, Instant::now()))
     }
 
     pub fn fetch_prev_weather_data(&self) -> Result<WeatherData, IoTError>{
@@ -139,11 +139,11 @@ impl IoTController{
         .query("timezone", "Europe/London")
         .call()?;
 
-        let raw_data:RawWeatherData = response.into_body().read_json()?;
+        let weather_data:WeatherData = response.into_body().read_json()?;
 
-        println!("Successfully received {} hours of historic weather data for training:", raw_data.hourly.time.iter().count());
+        println!("Successfully received {} hours of historic weather data for training:", weather_data.hourly.time.iter().count());
 
-        Ok(WeatherData { hourly:raw_data.hourly.try_into()? })
+        Ok(weather_data)
     }
 
 }

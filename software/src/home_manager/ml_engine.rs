@@ -22,11 +22,27 @@ impl TryFrom<WeatherData> for Features{
     type Error = WeatherDataError;
     fn try_from(weather: WeatherData) -> Result<Self, Self::Error> {
         let feature_arrs = weather.hourly;
+
+        let mut hour_sin:[f32; 24] = [0.; 24];
+        let mut hour_cos:[f32; 24] = [0.; 24];
+
+        for i in 0..24 {
+            let time = &feature_arrs.time[i];
+            let hour_str = time.get(11..13).ok_or(WeatherDataError::DateConversion())?;
+            let hour:f32 = match hour_str.parse(){
+                Ok(h) => h,
+                Err(_) => return Err(WeatherDataError::DateConversion())
+            };
+            let angle:f32 = 2.0 * std::f32::consts::PI * hour / 24.0;
+
+            *hour_sin.get_mut(i).ok_or(WeatherDataError::DataOverflow())? = angle.sin();
+            *hour_cos.get_mut(i).ok_or(WeatherDataError::DataOverflow())? = angle.cos();
+        }
         let mut result = Self{ features:[[0.; 7];24] };
         for i in 0..24{
             *result.features.get_mut(i).ok_or(WeatherDataError::DataOverflow())? = [
-                    (*feature_arrs.hour_sin.get(i).ok_or(WeatherDataError::FloatConversion())? as f64),
-                    (*feature_arrs.hour_cos.get(i).ok_or(WeatherDataError::FloatConversion())? as f64),
+                    (*hour_sin.get(i).ok_or(WeatherDataError::FloatConversion())? as f64),
+                    (*hour_cos.get(i).ok_or(WeatherDataError::FloatConversion())? as f64),
                     (*feature_arrs.shortwave_radiation.get(i).ok_or(WeatherDataError::FloatConversion())? as f64),
                     (*feature_arrs.direct_radiation.get(i).ok_or(WeatherDataError::FloatConversion())? as f64),
                     (*feature_arrs.diffuse_radiation.get(i).ok_or(WeatherDataError::FloatConversion())? as f64),
