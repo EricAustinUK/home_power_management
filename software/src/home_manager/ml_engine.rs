@@ -10,7 +10,7 @@ pub enum MLError {
     ModelError(#[from] rill_ml::RillError),
 
     #[error("Invalid data error")]
-    DataError(),
+    DataError(#[from] WeatherDataError),
     
 }
 
@@ -36,7 +36,7 @@ impl MLEngine{
         return Ok(MLEngine { model:RegressionPipeline::new(scaler, regression)? });
     }
 
-    pub fn infer(&self, weather:WeatherData) -> Result<Vec<f64>, WeatherDataError> {
+    pub fn infer(&self, weather:WeatherData) -> Result<Vec<f64>, MLError> {
         let mut result_vec = Vec::new();
         let feature_arrs = weather.hourly;
         for i in 0..feature_arrs.hour_sin.len(){
