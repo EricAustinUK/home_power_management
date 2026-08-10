@@ -29,6 +29,11 @@ pub enum HomeManagerError {
     DotEnv(#[from] DotEnvError),
 }
 
+struct HomeManagerEnv{
+    pub iot_cfg:IoTConfig,
+    pub model_bytes:Option<Vec<u8>>
+}
+
 #[derive(Debug, Error)]
 pub enum DotEnvError {
     #[error("Error loading .env file (please use .env.template to create a .env file): {0}")]
@@ -84,7 +89,8 @@ impl HomeManager{
             })
             .collect::<Result<Vec<InputPin>, rppal::gpio::Error>>()?;
 
-            let iot_cfg = Self::load_env()?;
+            let env = Self::load_env()?;
+
 
             Ok(Self { 
                 grid_cap_wh:3840, 
@@ -93,9 +99,9 @@ impl HomeManager{
                 real_solar_prod_wh:std::array::from_fn(|_| AtomicUsize::new(0)), // TEMP: CHANGE THIS DISGUSTING AI FIX ASAP
                 exp_house_usg_wh:AtomicUsize::new(6000),
                 control_panel:panel,
-                iot_controller:IoTController::new(iot_cfg)?, 
+                iot_controller:IoTController::new(env.iot_cfg)?, 
                 tgl_pins:tgl_pins,
-                ml_engine:MLEngine::new()?
+                ml_engine:MLEngine::new(env.model_bytes)?
             })
     }
 
@@ -118,7 +124,7 @@ impl HomeManager{
         Ok(())
     }
 
-    fn load_env() -> Result<IoTConfig, DotEnvError>{
+    fn load_env() -> Result<HomeManagerEnv, DotEnvError>{
         dotenv()?;
         
         let hass_host:Uri = match env::var("HASS_HOST") {
@@ -177,16 +183,26 @@ impl HomeManager{
             },
             Err(e) => return Err(DotEnvError::MissingEnvVar { name: "PANEL_LONGITUDE", err: e })
         };
+        let model_bytes:Option<Vec<u8>> = match env::var("MODEL_PATH"){
+            Ok(path_str) => match std::fs::read(path_str){
+                Ok(bytes) => Some(bytes),
+                Err(_) => return Err(DotEnvError::EnvValueParse { name: "MODEL_PATH" })
+            },
+            Err(e) => None,
+        };
 
-        Ok(IoTConfig { 
-            hass_host:hass_host,
-            hass_port:hass_port,
-            battery_url:battery_url,
-            ev_url:ev_url,
-            ev_charger_url:ev_charger_url,
-            weather_api_url:weather_url,
-            panel_latitude:panel_latitude,
-            panel_longitude:panel_longitude
+        Ok(HomeManagerEnv{ 
+            iot_cfg: IoTConfig { 
+                hass_host:hass_host,
+                hass_port:hass_port,
+                battery_url:battery_url,
+                ev_url:ev_url,
+                ev_charger_url:ev_charger_url,
+                weather_api_url:weather_url,
+                panel_latitude:panel_latitude,
+                panel_longitude:panel_longitude
+            },
+            model_bytes:model_bytes
         })
     }
 }

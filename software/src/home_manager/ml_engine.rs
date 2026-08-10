@@ -1,6 +1,14 @@
+use std::path::Path;
+
 use crate::home_manager::iot_controller::{WeatherData, WeatherDataError};
 use rill_ml::{
-    OnlineRegressor, models::{LinearRegression, LinearRegressionConfig}, optim::{Optimizer, SgdConfig}, pipeline::RegressionPipeline, preprocessing::StandardScaler,
+    OnlineRegressor,
+    models::{LinearRegression,
+    LinearRegressionConfig},
+    optim::{Optimizer, SgdConfig},
+    pipeline::RegressionPipeline,
+    preprocessing::StandardScaler,
+    persistence::Snapshot
 };
 use thiserror::Error;
 
@@ -12,6 +20,12 @@ pub enum MLError {
     #[error("Invalid data error")]
     DataError(#[from] WeatherDataError),
     
+    #[error("Failed to parse model from file")]
+    ModelParseError(#[from] postcard::Error),
+
+
+    #[error("Failed to read model file")]
+    FileReadError(#[from] std::io::Error)
 }
 
 struct Features{
@@ -54,12 +68,14 @@ impl TryFrom<WeatherData> for Features{
     }
 }
 
+type Model = RegressionPipeline<StandardScaler, LinearRegression>;
+
 pub struct MLEngine{
-    model:RegressionPipeline<StandardScaler, LinearRegression>
+    model:Model
 }
 
 impl MLEngine{
-    pub fn new() -> Result<Self, MLError>{
+    pub fn new(model_bytes:Option<Vec<u8>>) -> Result<Self, MLError>{
         let scaler = StandardScaler::new(7)?;
         
         let mut sgd_conf = SgdConfig::default();
@@ -72,8 +88,13 @@ impl MLEngine{
         lr_conf.optimizer = optimiser;
 
         let regression = LinearRegression::new(7, lr_conf)?;
-
-        return Ok(MLEngine { model:RegressionPipeline::new(scaler, regression)? });
+        match model_bytes{
+            Some(model_bytes) => {
+                let snapshot:Snapshot<Model> =  postcard::from_bytes(&model_bytes)?; 
+                Ok(MLEngine { model:snapshot.model })
+            },
+            _ => Ok(MLEngine { model:RegressionPipeline::new(scaler, regression)? })
+        }
     }
 
     pub fn infer(&self, weather:WeatherData) -> Result<[f64; 24], MLError> {
