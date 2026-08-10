@@ -1,13 +1,12 @@
 pub mod iot_controller;
 mod control_panel;
+mod ml_engine;
 
-pub use iot_controller::WeatherData;
+pub use iot_controller::IoTError;
 use control_panel::PanelState;
 use std::sync::{Arc, atomic::AtomicUsize};
 use rppal::gpio::{InputPin, Trigger};
 use std::time::Duration;
-
-pub use crate::home_manager::iot_controller::InitError;
 
 
 pub struct HomeManager{
@@ -21,7 +20,7 @@ pub struct HomeManager{
 }
 
 impl HomeManager{
-    pub fn new() -> Result<Self, InitError> {
+    pub fn new() -> Result<Self, IoTError> {
     let panel = Arc::new(PanelState::new()?);
 
     let tgl_pins: Vec<InputPin> = [11, 12, 13]
@@ -30,7 +29,6 @@ impl HomeManager{
             let mut pin = panel.gpio.get(pin_no)?.into_input_pullup();
             let pin_no = pin.pin();
             
-            // Clone the Arc to move into the closure safely
             let panel_clone = Arc::clone(&panel);
 
             pin.set_async_interrupt(

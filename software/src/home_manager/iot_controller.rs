@@ -6,7 +6,7 @@ use ureq::{Agent, http::Uri};
 use serde::Deserialize;
 
 #[derive(Debug, Error)]
-pub enum InitError {
+pub enum IoTError {
     #[error("Network error: {0}")]
     Endpoint(#[from] ureq::Error),
     
@@ -27,6 +27,11 @@ pub enum InitError {
     EnvValueParse {
         name: &'static str,
     },
+
+    #[error("Error parsing value in Weather API")]
+    WeatherAPIError
+
+    
 }
 
 struct IoTConfig {
@@ -46,13 +51,63 @@ pub struct WeatherData{
 }
 
 #[derive(Clone, Deserialize)]
+pub struct RawWeatherData{
+    pub hourly: RawHourData
+}
+
+#[derive(Clone, Deserialize)]
 pub struct HourData {
+    pub hour_sin:Vec<f32>,
+    pub hour_cos:Vec<f32>,
+    pub shortwave_radiation: Vec<f32>,
+    pub direct_radiation: Vec<f32>,
+    pub diffuse_radiation: Vec<f32>,
+    pub cloud_cover: Vec<f32>,
+    pub temperature_2m: Vec<f32>
+}
+
+#[derive(Clone, Deserialize)]
+pub struct RawHourData {
     pub time: Vec<String>,
     pub shortwave_radiation: Vec<f32>,
     pub direct_radiation: Vec<f32>,
     pub diffuse_radiation: Vec<f32>,
     pub cloud_cover: Vec<f32>,
     pub temperature_2m: Vec<f32>
+}
+
+impl TryFrom<RawHourData> for HourData {
+    type Error = IoTError;
+
+    fn try_from(raw: RawHourData) -> Result<Self, IoTError> {
+        let mut hour_sin = Vec::with_capacity(raw.time.len());
+        let mut hour_cos = Vec::with_capacity(raw.time.len());
+
+        for time in &raw.time {
+            let hour_str = match time.get(11..13){
+                Some(h) => h,
+                None => return Err(IoTError::WeatherAPIError)
+            };
+            let hour:f32 = match hour_str.parse(){
+                Ok(h) => h,
+                Err(_) => return Err(IoTError::WeatherAPIError)
+            };
+            let angle:f32 = 2.0 * std::f32::consts::PI * hour / 24.0;
+
+            hour_sin.push(angle.sin());
+            hour_cos.push(angle.cos());
+        }
+
+        Ok(HourData {
+            hour_sin,
+            hour_cos,
+            shortwave_radiation: raw.shortwave_radiation,
+            direct_radiation: raw.direct_radiation,
+            diffuse_radiation: raw.diffuse_radiation,
+            cloud_cover: raw.cloud_cover,
+            temperature_2m: raw.temperature_2m,
+        })
+    }
 }
 
 pub struct IoTController{
@@ -65,64 +120,64 @@ pub struct IoTController{
 
 
 impl IoTController{
-    pub fn new() -> Result<Self, InitError> {
+    pub fn new() -> Result<Self, IoTError> {
         dotenv()?;
         
         let hass_host:Uri = match env::var("HASS_HOST") {
             Ok(url_str) => match Uri::from_str(&url_str){
                 Ok(url) => url,
-                Err(_) => return Err( InitError::EnvValueParse { name:"HASS_HOST" } )
+                Err(_) => return Err( IoTError::EnvValueParse { name:"HASS_HOST" } )
             },
-            Err(e) => return Err(InitError::MissingEnvVar { name: "HASS_HOST", err: e })
+            Err(e) => return Err(IoTError::MissingEnvVar { name: "HASS_HOST", err: e })
         };
         let hass_port:u16 = match env::var("HASS_PORT"){
             Ok(port_str) => match port_str.parse::<u16>(){
                 Ok(port) => port,
-                Err(_) => return Err(InitError::EnvValueParse { name: "HASS_PORT" })
+                Err(_) => return Err(IoTError::EnvValueParse { name: "HASS_PORT" })
             },
-            Err(e) => return Err(InitError::MissingEnvVar { name: "HASS_PORT", err: e })
+            Err(e) => return Err(IoTError::MissingEnvVar { name: "HASS_PORT", err: e })
         };
         let battery_url:Uri = match env::var("BATTERY_URL") {
             Ok(url_str) => match Uri::from_str(&url_str){
                 Ok(url) => url,
-                Err(_) => return Err(InitError::EnvValueParse { name:"BATTERY_URL" } )
+                Err(_) => return Err(IoTError::EnvValueParse { name:"BATTERY_URL" } )
             },
-            Err(e) => return Err(InitError::MissingEnvVar { name: "BATTERY_URL", err: e })
+            Err(e) => return Err(IoTError::MissingEnvVar { name: "BATTERY_URL", err: e })
         };
         let ev_url:Uri = match env::var("EV_URL") {
             Ok(url_str) => match Uri::from_str(&url_str){
                 Ok(url) => url,
-                Err(_) => return Err(InitError::EnvValueParse { name:"EV_URL" })
+                Err(_) => return Err(IoTError::EnvValueParse { name:"EV_URL" })
             },
-            Err(e) => return Err(InitError::MissingEnvVar { name: "EV_URL", err: e })
+            Err(e) => return Err(IoTError::MissingEnvVar { name: "EV_URL", err: e })
         };
         let ev_charger_url:Uri = match env::var("EV_CHARGER_URL") {
             Ok(url_str) => match Uri::from_str(&url_str){
                 Ok(url) => url,
-                Err(_) => return Err(InitError::EnvValueParse { name:"EV_CHARGER_URL" })
+                Err(_) => return Err(IoTError::EnvValueParse { name:"EV_CHARGER_URL" })
             },
-            Err(e) => return Err(InitError::MissingEnvVar { name: "EV_CHARGER_URL", err: e })
+            Err(e) => return Err(IoTError::MissingEnvVar { name: "EV_CHARGER_URL", err: e })
         };
         let weather_url:Uri = match env::var("WEATHER_API_URL") {
             Ok(url_str) => match Uri::from_str(&url_str){
                 Ok(url) => url,
-                Err(_) => return Err(InitError::EnvValueParse { name:"WEATHER_API_URL" })
+                Err(_) => return Err(IoTError::EnvValueParse { name:"WEATHER_API_URL" })
             },
-            Err(e) => return Err(InitError::MissingEnvVar { name: "WEATHER_API_URL", err: e })
+            Err(e) => return Err(IoTError::MissingEnvVar { name: "WEATHER_API_URL", err: e })
         };
         let panel_latitude:f32 = match env::var("PANEL_LATITUTDE"){
             Ok(lat_str) => match lat_str.parse::<f32>(){
                 Ok(lat) => lat,
-                Err(_) => return Err(InitError::EnvValueParse { name: "PANEL_LATITUTDE" })
+                Err(_) => return Err(IoTError::EnvValueParse { name: "PANEL_LATITUTDE" })
             },
-            Err(e) => return Err(InitError::MissingEnvVar { name: "PANEL_LATITUTDE", err: e })
+            Err(e) => return Err(IoTError::MissingEnvVar { name: "PANEL_LATITUTDE", err: e })
         };
         let panel_longitude:f32 = match env::var("PANEL_LONGITUDE"){
             Ok(lon_str) => match lon_str.parse::<f32>(){
                 Ok(lon) => lon,
-                Err(_) => return Err(InitError::EnvValueParse { name: "PANEL_LONGITUDE" })
+                Err(_) => return Err(IoTError::EnvValueParse { name: "PANEL_LONGITUDE" })
             },
-            Err(e) => return Err(InitError::MissingEnvVar { name: "PANEL_LONGITUDE", err: e })
+            Err(e) => return Err(IoTError::MissingEnvVar { name: "PANEL_LONGITUDE", err: e })
         };
 
         let cfg = IoTConfig { 
@@ -174,7 +229,7 @@ impl IoTController{
         return Ok(val);
     }
 
-    fn get_weather_data(&mut self, min_cache:Option<Instant>) -> Result<&WeatherData, ureq::Error>{
+    fn get_weather_data(&mut self, min_cache:Option<Instant>) -> Result<&WeatherData, IoTError>{
         match min_cache {
             Some(min) => match min < self.soc_perc.1 {
                 true => Ok(&self.weather_data.0),
@@ -200,7 +255,7 @@ impl IoTController{
         Ok((67, Instant::now()))
     }
 
-    fn fetch_weather_data(agent:&Agent, cfg:&IoTConfig) -> Result<(WeatherData, Instant), ureq::Error>{
+    fn fetch_weather_data(agent:&Agent, cfg:&IoTConfig) -> Result<(WeatherData, Instant), IoTError>{
         let response = agent
         .get(&cfg.weather_api_url)
         .query("latitude", cfg.panel_latitude.to_string())
@@ -211,11 +266,11 @@ impl IoTController{
         .query("forecast_days", "2")
         .call()?;
 
-        let weather_data:WeatherData = response.into_body().read_json()?;
+        let raw_weather_data:RawWeatherData = response.into_body().read_json()?;
 
-        println!("Successfully retrieved {} hours of weather data.", weather_data.hourly.time.iter().count());
-    
-        Ok((weather_data, Instant::now()))
+        println!("Successfully retrieved {} hours of weather data.", raw_weather_data.hourly.time.iter().count());
+
+        Ok((WeatherData {hourly:raw_weather_data.hourly.try_into()? }, Instant::now()))
     }
 
 }
