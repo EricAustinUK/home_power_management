@@ -18,10 +18,26 @@
             "group": "build",
             "label": "build software layer"
         },
+
+        {
+            "type": "cargo",
+            "command": "run",
+            "problemMatcher": [
+                "$rustc"
+            ],
+            "options": {
+                "cwd": "${workspaceFolder}/ml"
+            },
+            "group": "build",
+            "label": "train ml model"
+        },
+
+        
+
         {
             "type": "shell",
-            "dependsOn": "build software layer",
-            "command": "set -a && source ../.env && set +a && scp target/arm-unknown-linux-musleabihf/release/home_assist ../.env $PI_USER@$PI_HOST:~$PI_USER/ && ssh $PI_USER@$PI_HOST \"chmod +x ~$PI_USER/home_assist\"",
+            "dependsOn": ["build software layer", "train ml model"],
+            "command": "set -a && source ../.env && set +a && scp target/arm-unknown-linux-musleabihf/release/home_assist ../.env ../ml/output/$MODEL_FILENAME $PI_USER@$PI_HOST:~$PI_USER/ && ssh $PI_USER@$PI_HOST \"chmod +x ~$PI_USER/home_assist\"",
             "options": {
                 "cwd": "${workspaceFolder}/software"
             },

@@ -183,10 +183,10 @@ impl HomeManager{
             },
             Err(e) => return Err(DotEnvError::MissingEnvVar { name: "PANEL_LONGITUDE", err: e })
         };
-        let model_bytes:Option<Vec<u8>> = match env::var("MODEL_PATH"){
+        let model_bytes:Option<Vec<u8>> = match env::var("MODEL_FILENAME"){
             Ok(path_str) => match std::fs::read(path_str){
                 Ok(bytes) => Some(bytes),
-                Err(_) => return Err(DotEnvError::EnvValueParse { name: "MODEL_PATH" })
+                Err(_) => return Err(DotEnvError::EnvValueParse { name: "MODEL_FILENAME" })
             },
             Err(e) => None,
         };

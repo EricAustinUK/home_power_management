@@ -1,6 +1,4 @@
-use std::path::Path;
-
-use crate::home_manager::iot_controller::{WeatherData, WeatherDataError};
+use crate::home_manager::{iot_controller::{WeatherData, WeatherDataError}, ml_engine::MLError::ModelParseError};
 use rill_ml::{
     OnlineRegressor,
     models::{LinearRegression,
@@ -8,14 +6,16 @@ use rill_ml::{
     optim::{Optimizer, SgdConfig},
     pipeline::RegressionPipeline,
     preprocessing::StandardScaler,
-    persistence::Snapshot
+    persistence::{Snapshot, ValidateState},
+    RillError
 };
+use serde::Deserialize;
 use thiserror::Error;
 
 #[derive(Debug, Error)]
 pub enum MLError {
     #[error("Model error: {0}")]
-    ModelError(#[from] rill_ml::RillError),
+    ModelError(#[from] RillError),
 
     #[error("Invalid data error")]
     DataError(#[from] WeatherDataError),
@@ -41,10 +41,8 @@ pub struct MLEngine{
 impl MLEngine{
     pub fn new(model_bytes:Option<Vec<u8>>) -> Result<Self, MLError>{
         let scaler = StandardScaler::new(7)?;
-        
-        let mut sgd_conf = SgdConfig::default();
-        sgd_conf.learning_rate = 0.05;
-        sgd_conf.l2 = 0.00;
+                
+        let sgd_conf = SgdConfig::default();
 
         let optimiser = Optimizer::sgd(7,sgd_conf)?;
 
@@ -52,12 +50,22 @@ impl MLEngine{
         lr_conf.optimizer = optimiser;
 
         let regression = LinearRegression::new(7, lr_conf)?;
+        
+        
+        let model:Model = RegressionPipeline::new(scaler, regression)?;
+        
         match model_bytes{
-            Some(model_bytes) => {
-                let snapshot:Snapshot<Model> =  postcard::from_bytes(&model_bytes)?; 
-                Ok(MLEngine { model:snapshot.model })
+            Some(bytes) => {
+                let snapshot: Snapshot<Model> = postcard::from_bytes(&bytes)?;
+
+                let valid_model = snapshot.into_validated_model()?;
+
+                Ok(MLEngine { model: valid_model })
             },
-            _ => Ok(MLEngine { model:RegressionPipeline::new(scaler, regression)? })
+            _ => {
+                println!("No model passed in .env file. Starting a fresh model:");
+                Ok(MLEngine { model:model })
+            }
         }
     }
 
