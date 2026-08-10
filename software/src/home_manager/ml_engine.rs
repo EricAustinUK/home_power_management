@@ -36,10 +36,10 @@ impl MLEngine{
         return Ok(MLEngine { model:RegressionPipeline::new(scaler, regression)? });
     }
 
-    pub fn infer(&self, weather:WeatherData) -> Result<Vec<f64>, MLError> {
-        let mut result_vec = Vec::new();
+    pub fn infer(&self, weather:WeatherData) -> Result<[f64; 24], MLError> {
+        let mut result_arr:[f64; 24] = [0.; 24];
         let feature_arrs = weather.hourly;
-        for i in 0..feature_arrs.hour_sin.len(){
+        for i in 0..24{
             let result = self.model.predict(&[
                 (*feature_arrs.hour_sin.get(i).ok_or(WeatherDataError::FloatConversion())? as f64),
                 (*feature_arrs.hour_cos.get(i).ok_or(WeatherDataError::FloatConversion())? as f64),
@@ -49,8 +49,8 @@ impl MLEngine{
                 (*feature_arrs.cloud_cover.get(i).ok_or(WeatherDataError::FloatConversion())? as f64),
                 (*feature_arrs.temperature_2m.get(i).ok_or(WeatherDataError::FloatConversion())? as f64)
             ])?;
-            result_vec.push(result);
+            *result_arr.get_mut(i).ok_or(WeatherDataError::DataOverflow())? = result;
         }
-        Ok(result_vec)
+        Ok(result_arr)
     }
 }

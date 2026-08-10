@@ -51,7 +51,7 @@ pub enum DotEnvError {
 pub struct HomeManager{
     grid_cap_wh:usize,
     soc_est_wh:usize,
-    exp_solar_prod_wh:AtomicUsize,
+    exp_solar_prod_wh:[AtomicUsize; 24],
     exp_house_usg_wh:AtomicUsize,
     control_panel:Arc<PanelState>,
     iot_controller:IoTController,
@@ -89,7 +89,7 @@ impl HomeManager{
             Ok(Self { 
                 grid_cap_wh:3840, 
                 soc_est_wh:0, 
-                exp_solar_prod_wh:AtomicUsize::new(0), 
+                exp_solar_prod_wh:std::array::from_fn(|_| AtomicUsize::new(0)), // TEMP: CHANGE THIS DISGUSTING AI FIX ASAP
                 exp_house_usg_wh:AtomicUsize::new(6000),
                 control_panel:panel,
                 iot_controller:IoTController::new(iot_cfg)?, 
@@ -98,8 +98,8 @@ impl HomeManager{
             })
     }
 
-    pub fn train(&self){
-
+    pub fn train(&self) -> Result<(), HomeManagerError>{
+        let prev_weather_data = self.iot_controller.fetch_prev_weather_data();
     }
 
     pub fn predict(&mut self){
