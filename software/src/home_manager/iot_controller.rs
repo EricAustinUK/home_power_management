@@ -31,7 +31,6 @@ pub enum IoTError {
 
     #[error("Error parsing value in Weather API")]
     WeatherAPIError
-
     
 }
 
