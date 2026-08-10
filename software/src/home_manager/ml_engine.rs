@@ -53,4 +53,8 @@ impl MLEngine{
         }
         Ok(result_arr)
     }
+
+    pub fn train(&self, real_weather:WeatherData, real_solar:[f64; 24]) -> Result<(), MLError>{
+        Ok(())
+    }
 }

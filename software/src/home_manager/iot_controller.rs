@@ -63,7 +63,7 @@ impl IoTController{
         return Ok(val);
     }
 
-    fn get_soc_perc(&mut self, min_cache:Option<Instant>) -> Result<u8, ureq::Error>{
+    pub fn get_soc_perc(&mut self, min_cache:Option<Instant>) -> Result<u8, ureq::Error>{
         let val = match min_cache {
             Some(min) => match min < self.soc_perc.1 {
                 true => self.soc_perc.0,
@@ -76,7 +76,7 @@ impl IoTController{
         return Ok(val);
     }
 
-    fn get_weather_data(&mut self, min_cache:Option<Instant>) -> Result<&WeatherData, IoTError>{
+    pub fn get_weather_data(&mut self, min_cache:Option<Instant>) -> Result<&WeatherData, IoTError>{
         match min_cache {
             Some(min) => match min < self.soc_perc.1 {
                 true => Ok(&self.weather_data.0),

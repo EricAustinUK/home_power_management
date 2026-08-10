@@ -6,14 +6,13 @@ mod weather_data;
 pub use iot_controller::IoTError;
 use iot_controller::{IoTController, IoTConfig};
 use control_panel::PanelState;
-use std::{str::FromStr, sync::{Arc, atomic::AtomicUsize}};
+use std::{str::FromStr, sync::{Arc, atomic::{AtomicUsize, Ordering}}, time::Instant};
 use rppal::gpio::{InputPin, Trigger};
-use std::time::Duration;
+use std::{env, time::Duration};
 use ml_engine::{MLEngine, MLError};
 use thiserror::Error;
 use dotenvy::dotenv;
 use ureq::http::Uri;
-use std::env;
 
 #[derive(Debug, Error)]
 pub enum HomeManagerError {
@@ -52,6 +51,7 @@ pub struct HomeManager{
     grid_cap_wh:usize,
     soc_est_wh:usize,
     exp_solar_prod_wh:[AtomicUsize; 24],
+    real_solar_prod_wh:[AtomicUsize; 24],
     exp_house_usg_wh:AtomicUsize,
     control_panel:Arc<PanelState>,
     iot_controller:IoTController,
@@ -90,6 +90,7 @@ impl HomeManager{
                 grid_cap_wh:3840, 
                 soc_est_wh:0, 
                 exp_solar_prod_wh:std::array::from_fn(|_| AtomicUsize::new(0)), // TEMP: CHANGE THIS DISGUSTING AI FIX ASAP
+                real_solar_prod_wh:std::array::from_fn(|_| AtomicUsize::new(0)), // TEMP: CHANGE THIS DISGUSTING AI FIX ASAP
                 exp_house_usg_wh:AtomicUsize::new(6000),
                 control_panel:panel,
                 iot_controller:IoTController::new(iot_cfg)?, 
@@ -99,11 +100,22 @@ impl HomeManager{
     }
 
     pub fn train(&self) -> Result<(), HomeManagerError>{
-        let prev_weather_data = self.iot_controller.fetch_prev_weather_data();
+        let real_weather_data = self.iot_controller.fetch_prev_weather_data()?;
+        let real_solar_data: [f64; 24] = std::array::from_fn(|i| {
+            self.real_solar_prod_wh[i].load(Ordering::Relaxed) as f64
+        });
+        Ok(self.ml_engine.train(real_weather_data, real_solar_data)?)
     }
 
-    pub fn predict(&mut self){
+    pub fn predict(&mut self) -> Result<(), HomeManagerError>{
+        let data = self.iot_controller.get_weather_data(Some(Instant::now() - Duration::from_mins(30)))?;
+        let predicted = self.ml_engine.infer(data.clone())?;
         
+        for (hour_val, pred_val) in self.exp_solar_prod_wh.iter().zip(predicted.iter()) {
+            hour_val.store(*pred_val as usize, Ordering::Relaxed);
+        }
+
+        Ok(())
     }
 
     fn load_env() -> Result<IoTConfig, DotEnvError>{
