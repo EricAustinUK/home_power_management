@@ -1,4 +1,4 @@
-use crate::home_manager::iot_controller::WeatherData;
+use crate::home_manager::iot_controller::{WeatherData, WeatherDataError};
 use rill_ml::{
     OnlineRegressor, models::{LinearRegression, LinearRegressionConfig}, optim::{Optimizer, SgdConfig}, pipeline::RegressionPipeline, preprocessing::StandardScaler,
 };
@@ -36,18 +36,18 @@ impl MLEngine{
         return Ok(MLEngine { model:RegressionPipeline::new(scaler, regression)? });
     }
 
-    pub fn infer(&self, weather:WeatherData) -> Result<Vec<f64>, MLError> {
+    pub fn infer(&self, weather:WeatherData) -> Result<Vec<f64>, WeatherDataError> {
         let mut result_vec = Vec::new();
         let feature_arrs = weather.hourly;
         for i in 0..feature_arrs.hour_sin.len(){
             let result = self.model.predict(&[
-                (*feature_arrs.hour_sin.get(i).ok_or(MLError::DataError())? as f64),
-                (*feature_arrs.hour_cos.get(i).ok_or(MLError::DataError())? as f64),
-                (*feature_arrs.shortwave_radiation.get(i).ok_or(MLError::DataError())? as f64),
-                (*feature_arrs.direct_radiation.get(i).ok_or(MLError::DataError())? as f64),
-                (*feature_arrs.diffuse_radiation.get(i).ok_or(MLError::DataError())? as f64),
-                (*feature_arrs.cloud_cover.get(i).ok_or(MLError::DataError())? as f64),
-                (*feature_arrs.temperature_2m.get(i).ok_or(MLError::DataError())? as f64)
+                (*feature_arrs.hour_sin.get(i).ok_or(WeatherDataError::FloatConversion())? as f64),
+                (*feature_arrs.hour_cos.get(i).ok_or(WeatherDataError::FloatConversion())? as f64),
+                (*feature_arrs.shortwave_radiation.get(i).ok_or(WeatherDataError::FloatConversion())? as f64),
+                (*feature_arrs.direct_radiation.get(i).ok_or(WeatherDataError::FloatConversion())? as f64),
+                (*feature_arrs.diffuse_radiation.get(i).ok_or(WeatherDataError::FloatConversion())? as f64),
+                (*feature_arrs.cloud_cover.get(i).ok_or(WeatherDataError::FloatConversion())? as f64),
+                (*feature_arrs.temperature_2m.get(i).ok_or(WeatherDataError::FloatConversion())? as f64)
             ])?;
             result_vec.push(result);
         }

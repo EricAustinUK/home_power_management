@@ -3,16 +3,13 @@ use thiserror::Error;
 use dotenvy::dotenv;
 use std::env;
 use ureq::{Agent, http::Uri};
-use serde::Deserialize;
 use time::{Duration};
+pub use crate::home_manager::weather_data::{WeatherData, RawWeatherData, WeatherDataError};
 
 #[derive(Debug, Error)]
 pub enum IoTError {
     #[error("Network error: {0}")]
     Endpoint(#[from] ureq::Error),
-    
-    #[error("GPIO error: {0}")]
-    GPIO(#[from] rppal::gpio::Error),
 
     #[error("Error loading .env file (please use .env.template to create a .env file): {0}")]
     MissingEnv(#[from] dotenvy::Error),
@@ -30,8 +27,7 @@ pub enum IoTError {
     },
 
     #[error("Error parsing value in Weather API")]
-    WeatherAPIError
-    
+    WeatherAPIError(#[from] WeatherDataError)
 }
 
 struct IoTConfig {
@@ -45,70 +41,6 @@ struct IoTConfig {
     panel_longitude:f32
 }
 
-#[derive(Clone, Deserialize)]
-pub struct WeatherData{
-    pub hourly: HourData
-}
-
-#[derive(Clone, Deserialize)]
-pub struct RawWeatherData{
-    pub hourly: RawHourData
-}
-
-#[derive(Clone, Deserialize)]
-pub struct HourData {
-    pub hour_sin:Vec<f32>,
-    pub hour_cos:Vec<f32>,
-    pub shortwave_radiation: Vec<f32>,
-    pub direct_radiation: Vec<f32>,
-    pub diffuse_radiation: Vec<f32>,
-    pub cloud_cover: Vec<f32>,
-    pub temperature_2m: Vec<f32>
-}
-
-#[derive(Clone, Deserialize)]
-pub struct RawHourData {
-    pub time: Vec<String>,
-    pub shortwave_radiation: Vec<f32>,
-    pub direct_radiation: Vec<f32>,
-    pub diffuse_radiation: Vec<f32>,
-    pub cloud_cover: Vec<f32>,
-    pub temperature_2m: Vec<f32>
-}
-
-impl TryFrom<RawHourData> for HourData {
-    type Error = IoTError;
-
-    fn try_from(raw: RawHourData) -> Result<Self, IoTError> {
-        let mut hour_sin = Vec::with_capacity(raw.time.len());
-        let mut hour_cos = Vec::with_capacity(raw.time.len());
-
-        for time in &raw.time {
-            let hour_str = match time.get(11..13){
-                Some(h) => h,
-                None => return Err(IoTError::WeatherAPIError)
-            };
-            let hour:f32 = match hour_str.parse(){
-                Ok(h) => h,
-                Err(_) => return Err(IoTError::WeatherAPIError)
-            };
-            let angle:f32 = 2.0 * std::f32::consts::PI * hour / 24.0;
-
-            hour_sin.push(angle.sin());
-            hour_cos.push(angle.cos());
-        }
-
-        Ok(HourData {
-            hour_sin,
-            hour_cos,
-            shortwave_radiation: raw.shortwave_radiation,
-            direct_radiation: raw.direct_radiation,
-            diffuse_radiation: raw.diffuse_radiation,
-            cloud_cover: raw.cloud_cover,
-            temperature_2m: raw.temperature_2m,
-        })
-    }
-}
 
 pub struct IoTController{
     soc_perc:(u8, Instant),
@@ -275,6 +207,28 @@ impl IoTController{
         println!("Successfully retrieved {} hours of weather data.", raw_weather_data.hourly.time.iter().count());
 
         Ok((WeatherData {hourly:raw_weather_data.hourly.try_into()? }, Instant::now()))
+    }
+
+    pub fn fetch_prev_weather_data(&self) -> Result<WeatherData, IoTError>{
+        let today = time::OffsetDateTime::now_utc().to_offset(time::macros::offset!(+1)).date().to_string();
+
+        let response = self.ureq_agent
+        .get(&self.iot_config.weather_api_url)
+        .query("latitude", self.iot_config.panel_latitude.to_string())
+        .query("longitude", self.iot_config.panel_longitude.to_string())
+        .query("hourly", "shortwave_radiation,direct_radiation,diffuse_radiation,temperature_2m,cloud_cover")
+        .query("tilt", "30")
+        .query("azimuth", "0")
+        .query("start_date", &today)
+        .query("end_date", &today)
+        .query("timezone", "Europe/London")
+        .call()?;
+
+        let raw_data:RawWeatherData = response.into_body().read_json()?;
+
+        println!("Successfully received {} hours of historic weather data for training:", raw_data.hourly.time.iter().count());
+
+        Ok(WeatherData { hourly:raw_data.hourly.try_into()? })
     }
 
 }

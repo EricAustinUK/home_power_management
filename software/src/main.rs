@@ -2,7 +2,7 @@ mod home_manager;
 
 use std::{thread::sleep, time::Duration};
 
-use home_manager::{HomeManager, IoTError};
+use home_manager::{HomeManager, HomeManagerError, IoTError};
 
 const INIT_ATTEMPTS:u8 = 5;
 const ATTEMPT_DELAY_S:u64 = 60;
@@ -10,36 +10,42 @@ const ATTEMPT_DELAY_S:u64 = 60;
 fn main() -> Result<(), Box<dyn std::error::Error>>{
     let home_manager = match  HomeManager::new() {
         Ok(hm) => hm,
-        Err(e) => match e {
-            IoTError::Endpoint(e) => {
-                let mut tries:u8 = 1;
-                println!("Error fetching initial data from endpoints due to: {:?} \nRetrying in {ATTEMPT_DELAY_S} second(s)...", e);
-                loop{
-                    sleep(Duration::from_secs(ATTEMPT_DELAY_S));
-                    tries += 1;
-                    let err:IoTError = match HomeManager::new(){
-                        Ok(hm) => break hm,
-                        Err(re_err) => re_err,
-                    };
+        Err(hm_e) => match hm_e {
+            HomeManagerError::IoTError(iot_hm_e) => match iot_hm_e{
+                IoTError::Endpoint(iot_e) => {
+                        let mut tries:u8 = 1;
+                        println!("Error fetching initial data from endpoints due to: {:?} \nRetrying in {ATTEMPT_DELAY_S} second(s)...", e);
+                        loop{
+                            sleep(Duration::from_secs(ATTEMPT_DELAY_S));
+                            tries += 1;
+                            let err = match HomeManager::new(){
+                                Ok(hm) => break hm,
+                                Err(re_err) => re_err,
+                            };
 
-                    match err{
-                        IoTError::Endpoint(re_e) => {
-                            println!("Attempt {tries}/{INIT_ATTEMPTS} failed to fetch initial data from endpoints due to:{:?}", re_e);
-                        },
-                        _ => return Err(Box::new(err))
-                    };
+                            match err{
+                                HomeManagerError::IoTError(iot_e) => match iot_e{
+                                    IoTError::Endpoint(re_e) => {
+                                        println!("Attempt {tries}/{INIT_ATTEMPTS} failed to fetch initial data from endpoints due to:{:?}", re_e);
+                                    },
+                                    _ => return Err(Box::new(iot_e))
+                                },
+                                _ => return Err(Box::new(err))
+                            };
 
-                    if tries == INIT_ATTEMPTS {
-                        println!("Failed to fetch initial data after {INIT_ATTEMPTS} attempts.");
-                        return Err(Box::new(e));
-                    }
-                    
-                    println!("Retrying again in {ATTEMPT_DELAY_S} second(s)...");
+                            if tries == INIT_ATTEMPTS {
+                                println!("Failed to fetch initial data after {INIT_ATTEMPTS} attempts.");
+                                return Err(Box::new(iot_e));
+                            }
+                            
+                            println!("Retrying again in {ATTEMPT_DELAY_S} second(s)...");
+                        }
+                    },
+                _ => {
+                    return Err(Box::new(iot_hm_e));
                 }
             },
-            _ => {
-                return Err(Box::new(e));
-            }
+            _ => return Err(Box::new(hm_e))
         }
     };
 
