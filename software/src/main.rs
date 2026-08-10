@@ -14,7 +14,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>>{
             HomeManagerError::IoTError(iot_hm_e) => match iot_hm_e{
                 IoTError::Endpoint(iot_e) => {
                         let mut tries:u8 = 1;
-                        println!("Error fetching initial data from endpoints due to: {:?} \nRetrying in {ATTEMPT_DELAY_S} second(s)...", e);
+                        println!("Error fetching initial data from endpoints due to: {:?} \nRetrying in {ATTEMPT_DELAY_S} second(s)...", iot_e);
                         loop{
                             sleep(Duration::from_secs(ATTEMPT_DELAY_S));
                             tries += 1;
