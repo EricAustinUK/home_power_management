@@ -1,7 +1,5 @@
-use std::{str::FromStr, time::{Instant, SystemTime}};
+use std::time::Instant;
 use thiserror::Error;
-use dotenvy::dotenv;
-use std::env;
 use ureq::{Agent, http::Uri};
 use time::{Duration};
 pub use crate::home_manager::weather_data::{WeatherData, RawWeatherData, WeatherDataError};
@@ -11,34 +9,19 @@ pub enum IoTError {
     #[error("Network error: {0}")]
     Endpoint(#[from] ureq::Error),
 
-    #[error("Error loading .env file (please use .env.template to create a .env file): {0}")]
-    MissingEnv(#[from] dotenvy::Error),
-
-    #[error("Missing environment variable '{name}': {err}")]
-    MissingEnvVar {
-        name: &'static str,
-        #[source]
-        err: env::VarError,
-    },
-
-    #[error("Error parsing value of: '{name}")]
-    EnvValueParse {
-        name: &'static str,
-    },
-
     #[error("Error parsing value in Weather API")]
     WeatherAPIError(#[from] WeatherDataError)
 }
 
-struct IoTConfig {
-    hass_host:Uri,
-    hass_port:u16,
-    battery_url:Uri,
-    ev_url:Uri,
-    ev_charger_url:Uri,
-    weather_api_url:Uri,
-    panel_latitude:f32,
-    panel_longitude:f32
+pub struct IoTConfig {
+    pub hass_host:Uri,
+    pub hass_port:u16,
+    pub battery_url:Uri,
+    pub ev_url:Uri,
+    pub ev_charger_url:Uri,
+    pub weather_api_url:Uri,
+    pub panel_latitude:f32,
+    pub panel_longitude:f32
 }
 
 
@@ -52,76 +35,8 @@ pub struct IoTController{
 
 
 impl IoTController{
-    pub fn new() -> Result<Self, IoTError> {
-        dotenv()?;
+    pub fn new(cfg:IoTConfig) -> Result<Self, IoTError> {
         
-        let hass_host:Uri = match env::var("HASS_HOST") {
-            Ok(url_str) => match Uri::from_str(&url_str){
-                Ok(url) => url,
-                Err(_) => return Err( IoTError::EnvValueParse { name:"HASS_HOST" } )
-            },
-            Err(e) => return Err(IoTError::MissingEnvVar { name: "HASS_HOST", err: e })
-        };
-        let hass_port:u16 = match env::var("HASS_PORT"){
-            Ok(port_str) => match port_str.parse::<u16>(){
-                Ok(port) => port,
-                Err(_) => return Err(IoTError::EnvValueParse { name: "HASS_PORT" })
-            },
-            Err(e) => return Err(IoTError::MissingEnvVar { name: "HASS_PORT", err: e })
-        };
-        let battery_url:Uri = match env::var("BATTERY_URL") {
-            Ok(url_str) => match Uri::from_str(&url_str){
-                Ok(url) => url,
-                Err(_) => return Err(IoTError::EnvValueParse { name:"BATTERY_URL" } )
-            },
-            Err(e) => return Err(IoTError::MissingEnvVar { name: "BATTERY_URL", err: e })
-        };
-        let ev_url:Uri = match env::var("EV_URL") {
-            Ok(url_str) => match Uri::from_str(&url_str){
-                Ok(url) => url,
-                Err(_) => return Err(IoTError::EnvValueParse { name:"EV_URL" })
-            },
-            Err(e) => return Err(IoTError::MissingEnvVar { name: "EV_URL", err: e })
-        };
-        let ev_charger_url:Uri = match env::var("EV_CHARGER_URL") {
-            Ok(url_str) => match Uri::from_str(&url_str){
-                Ok(url) => url,
-                Err(_) => return Err(IoTError::EnvValueParse { name:"EV_CHARGER_URL" })
-            },
-            Err(e) => return Err(IoTError::MissingEnvVar { name: "EV_CHARGER_URL", err: e })
-        };
-        let weather_url:Uri = match env::var("WEATHER_API_URL") {
-            Ok(url_str) => match Uri::from_str(&url_str){
-                Ok(url) => url,
-                Err(_) => return Err(IoTError::EnvValueParse { name:"WEATHER_API_URL" })
-            },
-            Err(e) => return Err(IoTError::MissingEnvVar { name: "WEATHER_API_URL", err: e })
-        };
-        let panel_latitude:f32 = match env::var("PANEL_LATITUTDE"){
-            Ok(lat_str) => match lat_str.parse::<f32>(){
-                Ok(lat) => lat,
-                Err(_) => return Err(IoTError::EnvValueParse { name: "PANEL_LATITUTDE" })
-            },
-            Err(e) => return Err(IoTError::MissingEnvVar { name: "PANEL_LATITUTDE", err: e })
-        };
-        let panel_longitude:f32 = match env::var("PANEL_LONGITUDE"){
-            Ok(lon_str) => match lon_str.parse::<f32>(){
-                Ok(lon) => lon,
-                Err(_) => return Err(IoTError::EnvValueParse { name: "PANEL_LONGITUDE" })
-            },
-            Err(e) => return Err(IoTError::MissingEnvVar { name: "PANEL_LONGITUDE", err: e })
-        };
-
-        let cfg = IoTConfig { 
-            hass_host:hass_host,
-            hass_port:hass_port,
-            battery_url:battery_url,
-            ev_url:ev_url,
-            ev_charger_url:ev_charger_url,
-            weather_api_url:weather_url,
-            panel_latitude:panel_latitude,
-            panel_longitude:panel_longitude
-        };
 
         let agent = Agent::new_with_defaults();
 

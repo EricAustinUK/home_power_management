@@ -19,7 +19,7 @@ pub struct MLEngine{
 }
 
 impl MLEngine{
-    pub fn new() -> Result<Self, rill_ml::RillError>{
+    pub fn new() -> Result<Self, MLError>{
         let scaler = StandardScaler::new(7)?;
         
         let mut sgd_conf = SgdConfig::default();
