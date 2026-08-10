@@ -1,9 +1,10 @@
-use std::{str::FromStr, time::Instant};
+use std::{str::FromStr, time::{Instant, SystemTime}};
 use thiserror::Error;
 use dotenvy::dotenv;
 use std::env;
 use ureq::{Agent, http::Uri};
 use serde::Deserialize;
+use time::{Duration};
 
 #[derive(Debug, Error)]
 pub enum IoTError {
@@ -256,6 +257,8 @@ impl IoTController{
     }
 
     fn fetch_weather_data(agent:&Agent, cfg:&IoTConfig) -> Result<(WeatherData, Instant), IoTError>{
+        let tomorrow = (time::OffsetDateTime::now_utc().to_offset(time::macros::offset!(+1)) + Duration::days(1)).date().to_string();
+
         let response = agent
         .get(&cfg.weather_api_url)
         .query("latitude", cfg.panel_latitude.to_string())
@@ -263,7 +266,9 @@ impl IoTController{
         .query("hourly", "shortwave_radiation,direct_radiation,diffuse_radiation,temperature_2m,cloud_cover")
         .query("tilt", "30")
         .query("azimuth", "0")
-        .query("forecast_days", "2")
+        .query("start_date", &tomorrow)
+        .query("end_date", &tomorrow)
+        .query("timezone", "Europe/London")
         .call()?;
 
         let raw_weather_data:RawWeatherData = response.into_body().read_json()?;
