@@ -47,7 +47,7 @@ fn main() {
             optimizer: MockOptimizer::Sgd(MockSgd {
                 feature_count,
                 config: MockSgdConfig {
-                    learning_rate: 0.1,
+                    learning_rate: 0.02,
                     l2: 0.0,
                 },
                 samples_seen,

@@ -40,20 +40,6 @@ pub struct MLEngine{
 
 impl MLEngine{
     pub fn new(model_bytes:Option<Vec<u8>>) -> Result<Self, MLError>{
-        let scaler = StandardScaler::new(7)?;
-                
-        let sgd_conf = SgdConfig::default();
-
-        let optimiser = Optimizer::sgd(7,sgd_conf)?;
-
-        let mut lr_conf = LinearRegressionConfig::default();
-        lr_conf.optimizer = optimiser;
-
-        let regression = LinearRegression::new(7, lr_conf)?;
-        
-        
-        let model:Model = RegressionPipeline::new(scaler, regression)?;
-        
         match model_bytes{
             Some(bytes) => {
                 let snapshot: Snapshot<Model> = postcard::from_bytes(&bytes)?;
@@ -64,6 +50,15 @@ impl MLEngine{
             },
             _ => {
                 println!("No model passed in .env file. Starting a fresh model:");
+                let scaler = StandardScaler::new(7)?;
+                let mut sgd_conf = SgdConfig::default();
+                sgd_conf.learning_rate = 0.1;
+                let optimiser = Optimizer::sgd(7,sgd_conf)?;
+                let mut lr_conf = LinearRegressionConfig::default();
+                lr_conf.optimizer = optimiser;
+                let regression = LinearRegression::new(7, lr_conf)?;        
+                let model:Model = RegressionPipeline::new(scaler, regression)?;
+                
                 Ok(MLEngine { model:model })
             }
         }
