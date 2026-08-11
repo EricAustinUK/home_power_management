@@ -7,7 +7,7 @@ pub use iot_controller::IoTError;
 use iot_controller::{IoTController, IoTConfig};
 use control_panel::PanelState;
 use std::{str::FromStr, sync::{Arc, atomic::{AtomicUsize, Ordering}}, time::Instant};
-use rppal::gpio::{InputPin, Trigger};
+use rppal::{gpio::{InputPin, Trigger}};
 use std::{env, time::Duration};
 use ml_engine::{MLEngine, MLError};
 use thiserror::Error;
@@ -31,8 +31,10 @@ pub enum HomeManagerError {
 
 struct HomeManagerEnv{
     pub iot_cfg:IoTConfig,
-    pub model_bytes:Option<Vec<u8>>
+    pub model_bytes:Option<Vec<u8>>,
+    pub model_data_path:Option<String>
 }
+
 
 #[derive(Debug, Error)]
 pub enum DotEnvError {
@@ -101,7 +103,7 @@ impl HomeManager{
                 control_panel:panel,
                 iot_controller:IoTController::new(env.iot_cfg)?, 
                 tgl_pins:tgl_pins,
-                ml_engine:MLEngine::new(env.model_bytes)?
+                ml_engine:MLEngine::new(env.model_bytes, env.model_data_path)?
             })
     }
 
@@ -183,12 +185,21 @@ impl HomeManager{
             },
             Err(e) => return Err(DotEnvError::MissingEnvVar { name: "PANEL_LONGITUDE", err: e })
         };
+
         let model_bytes:Option<Vec<u8>> = match env::var("MODEL_FILENAME"){
             Ok(path_str) => match std::fs::read(path_str){
                 Ok(bytes) => Some(bytes),
                 Err(_) => return Err(DotEnvError::EnvValueParse { name: "MODEL_FILENAME" })
             },
-            Err(e) => None,
+            Err(_) => None
+        };
+        
+        let model_data_filename:Option<String> = match env::var("MODEL_DATA_FILENAME"){
+            Ok(path_str) => match std::fs::exists(&path_str){
+                Ok(_) => Some(path_str),
+                Err(_) => return Err(DotEnvError::EnvValueParse { name: "MODEL_DATA_FILENAME" })
+            },
+            Err(_) => None,
         };
 
         Ok(HomeManagerEnv{ 
@@ -202,7 +213,8 @@ impl HomeManager{
                 panel_latitude:panel_latitude,
                 panel_longitude:panel_longitude
             },
-            model_bytes:model_bytes
+            model_bytes:model_bytes,
+            model_data_path:model_data_filename
         })
     }
 }

@@ -1,13 +1,60 @@
 mod rill_structs;
+use linfa_elasticnet::ElasticNet;
 use rill_structs::*;
-use ndarray::{Axis, Array1, Array2};
+use ndarray::{Axis, Array1, Array2, s};
 use linfa::prelude::*;
 
+use csv::ReaderBuilder;
+
+fn load_x(path: &str) -> Array2<f64> {
+    let mut rdr = ReaderBuilder::new()
+        .has_headers(true)
+        .from_path(path)
+        .unwrap();
+
+    let rows: Vec<Vec<f64>> = rdr
+        .records()
+        .map(|r| {
+            let record = r.unwrap();
+
+            // Skip time column, parse remaining 9 columns
+            record
+                .iter()
+                .skip(1)
+                .map(|v| v.parse::<f64>().unwrap())
+                .collect()
+        })
+        .collect();
+
+    let nrows = rows.len();
+    let ncols = rows[0].len();
+
+    let flat: Vec<f64> = rows.into_iter().flatten().collect();
+
+    Array2::from_shape_vec((nrows, ncols), flat).unwrap()
+}
+
+fn load_y(path: &str) -> Array1<f64> {
+    let mut rdr = ReaderBuilder::new()
+        .has_headers(true)
+        .from_path(path)
+        .unwrap();
+
+    let values: Vec<f64> = rdr
+        .records()
+        .map(|r| {
+            let record = r.unwrap();
+            record[1].parse::<f64>().unwrap()
+        })
+        .collect();
+
+    Array1::from_vec(values)
+}
+
 fn main() {
-    let x = Array2::from_shape_vec((2, 7), vec![
-        0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6,
-        0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7
-    ]).unwrap();
+    println!("{}", std::env::current_dir().unwrap().display());
+    let x = load_x("data/weather_features.csv");
+    let y = load_y("data/power_generation.csv");
 
     let mean = x.mean_axis(Axis(0)).unwrap();
     let var = x.var_axis(Axis(0), 0.0);
@@ -19,14 +66,23 @@ fn main() {
         row /= &s_dev;
     }
 
-    let y = Array1::from_vec(vec![67.0, 69.0]);
-    let dataset = Dataset::new(x_scaled, y);
-    let lin_reg = linfa_linear::LinearRegression::new().fit(&dataset).unwrap();
+    let dataset = Dataset::new(x_scaled, y.clone());
 
-    let feature_count = 7;
-    let samples_seen = 2;
-    
-    let m2s: Vec<f64> = var.iter().map(|&v| v * samples_seen as f64).collect();
+    let reg_model = ElasticNet::params()
+        .l1_ratio(0.)
+        .penalty(500.)
+        .fit(&dataset)
+        .unwrap();
+
+    let weights = reg_model.hyperplane().to_vec();
+    let intercept = reg_model.intercept();
+
+    let feature_count = 9;
+    let samples_seen = x.nrows() as u64;
+
+    let m2s: Vec<f64> = var.iter()
+        .map(|&v| v * (samples_seen as f64 - 1.0))
+        .collect();
 
     let stored_model = MockRegressionPipeline {
         transformer: MockStandardScaler {
@@ -42,13 +98,13 @@ fn main() {
         },
         model: MockLinearRegression {
             feature_count,
-            weights: lin_reg.params().to_vec(),
-            intercept: lin_reg.intercept(),
+            weights: weights,
+            intercept: intercept,
             optimizer: MockOptimizer::Sgd(MockSgd {
                 feature_count,
                 config: MockSgdConfig {
-                    learning_rate: 0.02,
-                    l2: 0.0,
+                    learning_rate: 0.001,
+                    l2: 0.001,
                 },
                 samples_seen,
             }),
@@ -64,4 +120,30 @@ fn main() {
 
     std::fs::write("output/model.bin", postcard::to_allocvec(&stored_snapshot).unwrap()).unwrap();
     println!("Model saved successfully");
+
+    let samples = x.nrows();
+
+    let mut training_data = Array2::<f64>::zeros((samples, 10));
+
+    training_data
+        .slice_mut(s![.., 0..9])
+        .assign(&x);
+
+    training_data
+        .column_mut(9)
+        .assign(&y);
+
+    let training_data_vec: Vec<[f64; 10]> = training_data
+        .outer_iter()
+        .map(|row| row.to_vec().try_into().unwrap())
+        .collect();
+    
+    let bytes = postcard::to_allocvec(&training_data_vec).unwrap();
+
+    std::fs::write(
+        "output/model_data.bin",
+        bytes
+    ).unwrap();
+
+
 }

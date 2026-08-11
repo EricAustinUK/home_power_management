@@ -53,19 +53,9 @@ impl TryInto<WeatherFeatures> for WeatherData {
             _ => false,
         };
 
-        let month_arr:[usize;12] = [
-            31,
+        let month_arr:[usize;12] = [31,
             { if leap {29} else {28} },
-            31,
-            30,
-            31,
-            30,
-            31,
-            31,
-            30,
-            31,
-            30,
-            31
+            31, 30, 31, 30, 31, 31, 30, 31, 30, 31
         ];
 
         let mut year_day:u16 = day;

@@ -37,7 +37,7 @@
         {
             "type": "shell",
             "dependsOn": ["build software layer", "train ml model"],
-            "command": "set -a && source ../.env && set +a && scp target/arm-unknown-linux-musleabihf/release/home_assist ../.env ../ml/output/$MODEL_FILENAME $PI_USER@$PI_HOST:~$PI_USER/ && ssh $PI_USER@$PI_HOST \"chmod +x ~$PI_USER/home_assist\"",
+            "command": "set -a && source ../.env && set +a && scp target/arm-unknown-linux-musleabihf/release/home_assist ../.env ${MODEL_FILENAME:+../ml/output/$MODEL_FILENAME} ${MODEL_DATA_FILENAME:+../ml/output/$MODEL_DATA_FILENAME} $PI_USER@$PI_HOST:~$PI_USER/ && ssh $PI_USER@$PI_HOST \"chmod +x ~$PI_USER/home_assist\"",
             "options": {
                 "cwd": "${workspaceFolder}/software"
             },
