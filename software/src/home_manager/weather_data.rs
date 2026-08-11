@@ -27,6 +27,61 @@ impl TryInto<WeatherFeatures> for WeatherData {
         let mut hour_sin = [0.0; 24];
         let mut hour_cos = [0.0; 24];
 
+
+        let mut result = WeatherFeatures {
+            features: [[0.0; 9]; 24],
+        };
+
+
+        let year:u16 = feature_arrs.time[0].get(0..4)
+            .ok_or(WeatherDataError::DateConversion())?
+            .parse()
+            .map_err(|_| WeatherDataError::DateConversion())?;
+        let month:usize = feature_arrs.time[0].get(5..7)
+            .ok_or(WeatherDataError::DateConversion())?
+            .parse()
+            .map_err(|_| WeatherDataError::DateConversion())?;
+        let day:u16 = feature_arrs.time[0].get(8..10)
+            .ok_or(WeatherDataError::DateConversion())?
+            .parse()
+            .map_err(|_| WeatherDataError::DateConversion())?;
+
+        let leap = match year {
+            y if y % 400 == 0 => true,
+            y if y % 100 == 0 => false,
+            y if y % 4 == 0 => true,
+            _ => false,
+        };
+
+        let month_arr:[usize;12] = [
+            31,
+            { if leap {29} else {28} },
+            31,
+            30,
+            31,
+            30,
+            31,
+            31,
+            30,
+            31,
+            30,
+            31
+        ];
+
+        let mut year_day:u16 = day;
+
+        for mo_i in 0..(month-1){
+            year_day += month_arr[mo_i] as u16;
+        }
+
+        let max_year_day:f32 = if leap {366.} else {365.};
+
+        let angle = 2.0 * std::f32::consts::PI * year_day as f32 / max_year_day as f32;
+
+        let year_day_sin = angle.sin();
+        let year_day_cos = angle.cos();
+
+
         for i in 0..24 {
             let time = &feature_arrs.time[i];
             let hour_str = time
@@ -41,14 +96,10 @@ impl TryInto<WeatherFeatures> for WeatherData {
 
             hour_sin[i] = angle.sin();
             hour_cos[i] = angle.cos();
-        }
 
-        let mut result = WeatherFeatures {
-            features: [[0.0; 7]; 24],
-        };
-
-        for i in 0..24 {
             result.features[i] = [
+                year_day_sin as f64,
+                year_day_cos as f64,
                 hour_sin[i] as f64,
                 hour_cos[i] as f64,
                 feature_arrs.shortwave_radiation[i] as f64,

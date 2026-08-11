@@ -1,4 +1,4 @@
-use crate::home_manager::{iot_controller::{WeatherData, WeatherDataError}, ml_engine::MLError::ModelParseError};
+use crate::home_manager::{iot_controller::{WeatherData, WeatherDataError}};
 use rill_ml::{
     OnlineRegressor,
     models::{LinearRegression,
@@ -6,10 +6,9 @@ use rill_ml::{
     optim::{Optimizer, SgdConfig},
     pipeline::RegressionPipeline,
     preprocessing::StandardScaler,
-    persistence::{Snapshot, ValidateState},
+    persistence::{Snapshot},
     RillError
 };
-use serde::Deserialize;
 use thiserror::Error;
 
 #[derive(Debug, Error)]
@@ -29,7 +28,7 @@ pub enum MLError {
 }
 
 pub struct WeatherFeatures{
-    pub features:[[f64;7];24]
+    pub features:[[f64;9];24]
 }
 
 type Model = RegressionPipeline<StandardScaler, LinearRegression>;
@@ -50,13 +49,13 @@ impl MLEngine{
             },
             _ => {
                 println!("No model passed in .env file. Starting a fresh model:");
-                let scaler = StandardScaler::new(7)?;
+                let scaler = StandardScaler::new(9)?;
                 let mut sgd_conf = SgdConfig::default();
                 sgd_conf.learning_rate = 0.1;
-                let optimiser = Optimizer::sgd(7,sgd_conf)?;
+                let optimiser = Optimizer::sgd(9,sgd_conf)?;
                 let mut lr_conf = LinearRegressionConfig::default();
                 lr_conf.optimizer = optimiser;
-                let regression = LinearRegression::new(7, lr_conf)?;        
+                let regression = LinearRegression::new(9, lr_conf)?;        
                 let model:Model = RegressionPipeline::new(scaler, regression)?;
                 
                 Ok(MLEngine { model:model })
