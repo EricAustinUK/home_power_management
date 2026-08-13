@@ -8,7 +8,7 @@ const INIT_ATTEMPTS:u8 = 5;
 const ATTEMPT_DELAY_S:u64 = 60;
 
 fn main() -> Result<(), Box<dyn std::error::Error>>{
-    let home_manager = match  HomeManager::new() {
+    let mut home_manager = match  HomeManager::new() {
         Ok(hm) => hm,
         Err(hm_e) => match hm_e {
             HomeManagerError::IoTError(iot_hm_e) => match iot_hm_e{
@@ -49,7 +49,20 @@ fn main() -> Result<(), Box<dyn std::error::Error>>{
         }
     };
 
-    std::thread::park();
-
-    Ok(())
+    // TODO: move all this logic into the homemanager class
+    
+    loop{
+        match home_manager.gpio_rx.recv_timeout(Duration::from_mins(5)){
+            Ok(pin) => {
+                home_manager.tgl_pin(pin);
+                println!("Rising edge on pin {pin}");
+            },
+            Err(std::sync::mpsc::RecvTimeoutError::Timeout) => {
+                // handle scheduled tasks here
+            },
+            Err(e) => {
+                return Err(Box::new(e));
+            }
+        }
+    }
 }

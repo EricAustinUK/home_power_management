@@ -6,13 +6,14 @@ mod weather_data;
 pub use iot_controller::IoTError;
 use iot_controller::{IoTController, IoTConfig};
 use control_panel::PanelState;
-use std::{str::FromStr, sync::{Arc, atomic::{AtomicUsize, Ordering}}, time::Instant};
-use rppal::{gpio::{InputPin, Trigger}};
+use url::Url;
+use std::{str::FromStr, sync::{Arc, atomic::{AtomicUsize, Ordering}, mpsc::{Receiver, SendError, Sender}}, time::Instant};
+use rppal::gpio::{Event, InputPin, Trigger};
 use std::{env, time::Duration};
 use ml_engine::{MLEngine, MLError};
 use thiserror::Error;
 use dotenvy::dotenv;
-use ureq::http::Uri;
+use ureq::{get, http::Uri};
 
 #[derive(Debug, Error)]
 pub enum HomeManagerError {
@@ -60,51 +61,28 @@ pub struct HomeManager{
     exp_solar_prod_wh:[AtomicUsize; 24],
     real_solar_prod_wh:[AtomicUsize; 24],
     exp_house_usg_wh:AtomicUsize,
-    control_panel:Arc<PanelState>,
+    control_panel:PanelState,
     iot_controller:IoTController,
-    tgl_pins:Vec<InputPin>,
-    ml_engine:MLEngine
+    ml_engine:MLEngine,
+    pub gpio_rx:Receiver<u8>
 }
 
 impl HomeManager{
     pub fn new() -> Result<Self, HomeManagerError> {
-        let panel = Arc::new(PanelState::new()?);
-
-        let tgl_pins: Vec<InputPin> = [11, 12, 13]
-            .into_iter()
-            .map(|pin_no| {
-                let mut pin = panel.gpio.get(pin_no)?.into_input_pullup();
-                let pin_no = pin.pin();
-                
-                let panel_clone = Arc::clone(&panel);
-
-                pin.set_async_interrupt(
-                    Trigger::RisingEdge,
-                    Some(Duration::from_millis(50)),
-                    move |_| {
-                        panel_clone.toggle(pin_no);
-                        println!("Rising edge detected on pin {}.", pin_no);
-                    },
-                )?;
-
-                Ok(pin) 
-            })
-            .collect::<Result<Vec<InputPin>, rppal::gpio::Error>>()?;
-
-            let env = Self::load_env()?;
-
-
-            Ok(Self { 
-                grid_cap_wh:3840, 
-                soc_est_wh:0, 
-                exp_solar_prod_wh:std::array::from_fn(|_| AtomicUsize::new(0)), // TEMP: CHANGE THIS DISGUSTING AI FIX ASAP
-                real_solar_prod_wh:std::array::from_fn(|_| AtomicUsize::new(0)), // TEMP: CHANGE THIS DISGUSTING AI FIX ASAP
-                exp_house_usg_wh:AtomicUsize::new(6000),
-                control_panel:panel,
-                iot_controller:IoTController::new(env.iot_cfg)?, 
-                tgl_pins:tgl_pins,
-                ml_engine:MLEngine::new(env.model_bytes, env.model_data_path)?
-            })
+        let (tx, rx) = std::sync::mpsc::channel();
+        let env = Self::load_env()?;
+        
+        Ok(Self { 
+            grid_cap_wh:3840, 
+            soc_est_wh:0, 
+            exp_solar_prod_wh:std::array::from_fn(|_| AtomicUsize::new(0)), // TEMP: CHANGE THIS DISGUSTING AI FIX ASAP
+            real_solar_prod_wh:std::array::from_fn(|_| AtomicUsize::new(0)), // TEMP: CHANGE THIS DISGUSTING AI FIX ASAP
+            exp_house_usg_wh:AtomicUsize::new(6000),
+            control_panel:PanelState::new(&tx)?,
+            iot_controller:IoTController::new(env.iot_cfg)?,
+            ml_engine:MLEngine::new(env.model_bytes, env.model_data_path)?,
+            gpio_rx:rx
+        })
     }
 
     pub fn train(&mut self) -> Result<(), HomeManagerError>{
@@ -126,16 +104,13 @@ impl HomeManager{
         Ok(())
     }
 
+    pub fn tgl_pin(&mut self, pin:u8){
+        self.control_panel.toggle(pin);
+    }
+
     fn load_env() -> Result<HomeManagerEnv, DotEnvError>{
         dotenv()?;
         
-        let hass_host:Uri = match env::var("HASS_HOST") {
-            Ok(url_str) => match Uri::from_str(&url_str){
-                Ok(url) => url,
-                Err(_) => return Err( DotEnvError::EnvValueParse { name:"HASS_HOST" } )
-            },
-            Err(e) => return Err(DotEnvError::MissingEnvVar { name: "HASS_HOST", err: e })
-        };
         let hass_port:u16 = match env::var("HASS_PORT"){
             Ok(port_str) => match port_str.parse::<u16>(){
                 Ok(port) => port,
@@ -143,11 +118,21 @@ impl HomeManager{
             },
             Err(e) => return Err(DotEnvError::MissingEnvVar { name: "HASS_PORT", err: e })
         };
-        let battery_url:Uri = match env::var("BATTERY_URL") {
-            Ok(url_str) => match Uri::from_str(&url_str){
+        
+        let hass_host:Url = match env::var("HASS_IP") {
+            Ok(url_str) => match Url::from_str(&format!("http://{url_str}:{hass_port}")){
                 Ok(url) => url,
-                Err(_) => return Err(DotEnvError::EnvValueParse { name:"BATTERY_URL" } )
+                Err(_) => return Err( DotEnvError::EnvValueParse { name:"HASS_IP" } )
             },
+            Err(e) => return Err(DotEnvError::MissingEnvVar { name: "HASS_IP", err: e })
+        };
+
+        let hass_token:String = match env::var("HASS_TOKEN"){
+            Ok(token) => token,
+            Err(e) => return Err(DotEnvError::MissingEnvVar { name: "HASS_TOKEN", err: e })
+        };
+        let battery_name:String = match env::var("BATTERY_NAME") {
+            Ok(name_str) => name_str,
             Err(e) => return Err(DotEnvError::MissingEnvVar { name: "BATTERY_URL", err: e })
         };
         let ev_url:Uri = match env::var("EV_URL") {
@@ -199,14 +184,15 @@ impl HomeManager{
                 Ok(_) => Some(path_str),
                 Err(_) => return Err(DotEnvError::EnvValueParse { name: "MODEL_DATA_FILENAME" })
             },
-            Err(_) => None,
-        };
+            Err(_) => None
+        };        
 
         Ok(HomeManagerEnv{ 
             iot_cfg: IoTConfig { 
                 hass_host:hass_host,
                 hass_port:hass_port,
-                battery_url:battery_url,
+                hass_token:hass_token,
+                battery_name:battery_name,
                 ev_url:ev_url,
                 ev_charger_url:ev_charger_url,
                 weather_api_url:weather_url,

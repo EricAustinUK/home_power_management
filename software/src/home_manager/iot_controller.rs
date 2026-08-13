@@ -1,7 +1,9 @@
-use std::time::Instant;
+use std::{time::{Instant, SystemTime}, str::FromStr};
+use serde::Deserialize;
 use thiserror::Error;
-use ureq::{Agent, http::Uri};
-use time::{Duration};
+use ureq::{Agent, http::{Uri, response}};
+use time::{Date, Duration, OffsetDateTime, PlainDateTime, Time, UtcOffset, format_description::well_known::Rfc3339 };
+use url::Url;
 pub use crate::home_manager::weather_data::{WeatherData, WeatherDataError};
 
 #[derive(Debug, Error)]
@@ -10,13 +12,23 @@ pub enum IoTError {
     Endpoint(#[from] ureq::Error),
 
     #[error("Error parsing value in Weather API")]
-    WeatherAPIError(#[from] WeatherDataError)
+    WeatherAPIError(#[from] WeatherDataError),
+
+    #[error("ureq considers URL invalid")]
+    InvalidURL(),
+
+    #[error("Pi cannot determine the local time offset")]
+    LocalTimeError(#[from] time::error::IndeterminateOffset),
+
+    #[error("Could not parse date/time recieved from endpoint")]
+    DateConversionError(#[from] time::error::Parse)
 }
 
 pub struct IoTConfig {
-    pub hass_host:Uri,
+    pub hass_host:Url,
     pub hass_port:u16,
-    pub battery_url:Uri,
+    pub hass_token:String,
+    pub battery_name:String,
     pub ev_url:Uri,
     pub ev_charger_url:Uri,
     pub weather_api_url:Uri,
@@ -33,6 +45,11 @@ pub struct IoTController{
     iot_config: IoTConfig
 }
 
+#[derive(Deserialize)]
+pub struct PvDataSample{
+    pub state:f64,
+    pub last_updated:String
+}
 
 impl IoTController{
     pub fn new(cfg:IoTConfig) -> Result<Self, IoTError> {
@@ -45,7 +62,9 @@ impl IoTController{
         let weather:(WeatherData, Instant) = IoTController::fetch_weather_data(&agent, &cfg)?;
 
         let iot_controller  = Self { soc_perc:soc_perc, ev_perc:ev_perc, weather_data:weather, ureq_agent:agent, iot_config:cfg };
-
+        //println!("Testing pv value fetch:");
+        //let output = iot_controller.fetch_hourly_solar_output_wh(time::OffsetDateTime::now_utc().date())?;
+        //println!("Values retrieved from home assistant{:?}", output);
 
         Ok(iot_controller)
     }
@@ -125,7 +144,8 @@ impl IoTController{
     }
 
     pub fn fetch_prev_weather_data(&self) -> Result<WeatherData, IoTError>{
-        let today = time::OffsetDateTime::now_utc().to_offset(time::macros::offset!(+1)).date().to_string();
+        
+        let today = time::OffsetDateTime::now_local()?.date().to_string();
 
         let response = self.ureq_agent
         .get(&self.iot_config.weather_api_url)
@@ -144,6 +164,60 @@ impl IoTController{
         println!("Successfully received {} hours of historic weather data for training:", weather_data.hourly.time.iter().count());
 
         Ok(weather_data)
+    }
+
+    pub fn fetch_hourly_solar_output_wh(&self, date:Date) -> Result<[f64; 24], IoTError>{
+        let local_offset = UtcOffset::current_local_offset().unwrap_or(UtcOffset::UTC);
+
+        let start_time = date.with_time(Time::from_hms(5, 0, 0).unwrap());
+        let start_dt = start_time.assume_offset(local_offset);
+
+        let start: String = start_dt.format(&Rfc3339).unwrap();
+
+
+        let end_time = date.with_time(Time::from_hms(5, 0, 0).unwrap());
+        let end_dt = end_time.assume_offset(local_offset);
+
+        let end: String = end_dt.format(&Rfc3339).unwrap();
+
+
+        let mut history_endpoint = self.iot_config.hass_host.clone();
+        history_endpoint.path_segments_mut().map_err(|_| IoTError::InvalidURL())?.push("api").push("").push("period").push(&start);
+
+        let uri:Uri = Uri::from_str(&history_endpoint.as_str()).map_err(|_| IoTError::InvalidURL())?;
+
+        let result = self.ureq_agent.get(&uri).header("Authorization",&self.iot_config.hass_token)
+        .query("end_time", &end)
+        .query("filter_entity_id", format!("sensor.{}_power_pv_sum", &self.iot_config.battery_name))
+        .call()?;
+
+        let pv_data:Vec<PvDataSample> = result.into_body().read_json()?;
+        let mut prev_t:OffsetDateTime = start_dt;
+        let mut this_hour:usize = 5;
+
+        let mut response_arr:[f64;24] = [0.; 24];
+
+        for sample in pv_data {
+            let pv = sample.state;
+            let sample_t = PlainDateTime::parse(&sample.last_updated, &Rfc3339)?.assume_offset(local_offset);
+            let t_s = sample_t.unix_timestamp() - prev_t.unix_timestamp();
+            let t_h:f64 = t_s as f64 / 3600.;
+
+            if sample_t.hour() as usize == this_hour{
+                response_arr[this_hour] += pv * t_h;
+            }else if (sample_t.hour() as usize == this_hour + 1){
+                let split_s =  sample_t.date().with_hms(sample_t.hour(), 0, 0).unwrap().assume_offset(local_offset).unix_timestamp() - prev_t.unix_timestamp();
+                response_arr[this_hour] += pv * (split_s as f64 / t_s as f64)/3600.;
+                response_arr[this_hour+1] = pv * ((t_s - split_s) as f64 / t_s as f64)/3600.;
+                
+                this_hour += 1;
+            }else{
+                // throw some kind of error for being an hour gap in pv
+            }
+            prev_t = sample_t;
+        }
+
+        Ok(response_arr)
     }
 
 }
