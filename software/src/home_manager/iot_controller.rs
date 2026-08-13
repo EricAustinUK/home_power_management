@@ -74,12 +74,12 @@ impl IoTController{
         Ok(iot_controller)
     }
 
-    fn fetch_ev_perc(&self) -> Result<(u8, Instant), ureq::Error>{
-        Ok((67, Instant::now()))
-    } 
+    fn fetch_ev_perc(&self) -> Result<u8, IoTError>{
+        Ok(67)
+    }
 
-    fn fetch_soc_perc(&self) -> Result<(u8, Instant), ureq::Error>{
-        Ok((67, Instant::now()))
+    fn fetch_soc_perc(&self) -> Result<u8, IoTError>{
+        Ok(67)
     }
 
     pub fn fetch_weather_data(&self, date:Date) -> Result<WeatherData, IoTError>{
