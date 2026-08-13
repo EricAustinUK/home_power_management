@@ -50,8 +50,13 @@ pub struct IoTController{
     iot_config: IoTConfig
 }
 
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize)]
 pub struct PvDataSample{
+    pub state:String,
+    pub last_updated:String
+}
+
+pub struct EvData{
     pub state:String,
     pub last_updated:String
 }
@@ -177,7 +182,6 @@ impl IoTController{
 
         let pv_data_outer:Vec<Vec<PvDataSample>> = result.into_body().read_json()?;
 
-        println!("{:?}", pv_data_outer);
         let pv_data = match pv_data_outer.first(){
             Some(pv_data) => pv_data,
             None => return Err(IoTError::InvalidHassResponse())
