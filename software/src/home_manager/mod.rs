@@ -167,16 +167,15 @@ impl HomeManager{
     fn load_env() -> Result<HomeManagerEnv, DotEnvError>{
         dotenv()?;
         
-        let hass_port:u16 = match env::var("HASS_PORT"){
+        let port:u16 = match env::var("HASS_PORT"){
             Ok(port_str) => match port_str.parse::<u16>(){
                 Ok(port) => port,
                 Err(_) => return Err(DotEnvError::EnvValueParse { name: "HASS_PORT" })
             },
             Err(e) => return Err(DotEnvError::MissingEnvVar { name: "HASS_PORT", err: e })
         };
-        
         let hass_host:Url = match env::var("HASS_IP") {
-            Ok(url_str) => match Url::from_str(&format!("http://{url_str}:{hass_port}")){
+            Ok(url_str) => match Url::from_str(&format!("http://{url_str}:{port}")){
                 Ok(url) => url,
                 Err(_) => return Err( DotEnvError::EnvValueParse { name:"HASS_IP" } )
             },
@@ -191,19 +190,13 @@ impl HomeManager{
             Ok(name_str) => name_str,
             Err(e) => return Err(DotEnvError::MissingEnvVar { name: "BATTERY_URL", err: e })
         };
-        let ev_url:Uri = match env::var("EV_URL") {
-            Ok(url_str) => match Uri::from_str(&url_str){
-                Ok(url) => url,
-                Err(_) => return Err(DotEnvError::EnvValueParse { name:"EV_URL" })
-            },
-            Err(e) => return Err(DotEnvError::MissingEnvVar { name: "EV_URL", err: e })
+        let ev_name:String = match env::var("EV_NAME") {
+            Ok(name_str) => name_str,
+            Err(e) => return Err(DotEnvError::MissingEnvVar { name: "EV_NAME", err: e })
         };
-        let ev_charger_url:Uri = match env::var("EV_CHARGER_URL") {
-            Ok(url_str) => match Uri::from_str(&url_str){
-                Ok(url) => url,
-                Err(_) => return Err(DotEnvError::EnvValueParse { name:"EV_CHARGER_URL" })
-            },
-            Err(e) => return Err(DotEnvError::MissingEnvVar { name: "EV_CHARGER_URL", err: e })
+        let ev_charger_name:String = match env::var("EV_CHARGER_NAME") {
+            Ok(name_str) => name_str,
+            Err(e) => return Err(DotEnvError::MissingEnvVar { name: "EV_CHARGER_NAME", err: e })
         };
         let weather_url:Uri = match env::var("WEATHER_API_URL") {
             Ok(url_str) => match Uri::from_str(&url_str){
@@ -226,7 +219,6 @@ impl HomeManager{
             },
             Err(e) => return Err(DotEnvError::MissingEnvVar { name: "PANEL_LONGITUDE", err: e })
         };
-
         let model_bytes:Option<Vec<u8>> = match env::var("MODEL_FILENAME"){
             Ok(path_str) => match std::fs::read(path_str){
                 Ok(bytes) => Some(bytes),
@@ -246,11 +238,10 @@ impl HomeManager{
         Ok(HomeManagerEnv{ 
             iot_cfg: IoTConfig { 
                 hass_host:hass_host,
-                hass_port:hass_port,
                 hass_token:hass_token,
                 battery_name:battery_name,
-                ev_url:ev_url,
-                ev_charger_url:ev_charger_url,
+                ev_name:ev_name,
+                ev_charger_name:ev_charger_name,
                 weather_api_url:weather_url,
                 panel_latitude:panel_latitude,
                 panel_longitude:panel_longitude

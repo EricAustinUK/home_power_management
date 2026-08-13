@@ -32,11 +32,10 @@ pub enum IoTError {
 
 pub struct IoTConfig {
     pub hass_host:Url,
-    pub hass_port:u16,
     pub hass_token:String,
     pub battery_name:String,
-    pub ev_url:Uri,
-    pub ev_charger_url:Uri,
+    pub ev_name:String,
+    pub ev_charger_name:String,
     pub weather_api_url:Uri,
     pub panel_latitude:f32,
     pub panel_longitude:f32
