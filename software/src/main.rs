@@ -63,7 +63,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>>{
     let mut state:State = State::Standard; // always set to standard, since HomeManager starts on the edge, and standard -> standard only manages EV state
 
     loop{
-        match home_manager.gpio_rx.recv_timeout(Duration::from_mins(20)){
+        match home_manager.gpio_rx.recv_timeout(Duration::from_secs(10)){
             Ok(pin) => {
                 home_manager.tgl_pin(pin);
                 println!("Rising edge on pin {pin}");

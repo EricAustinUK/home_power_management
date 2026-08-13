@@ -26,6 +26,9 @@ pub enum IoTError {
     #[error("Could not parse float recieved from endpoint")]
     FloatConversionError(#[from] std::num::ParseFloatError),
 
+    #[error("Could not parse integer recieved from endpoint")]
+    IntConversionError(#[from] std::num::ParseIntError),
+
     #[error("Home assistant returned empty array for history")]
     InvalidHassResponse(),
 }
@@ -53,7 +56,8 @@ pub struct PvDataSample{
     pub last_updated:String
 }
 
-pub struct EvData{
+#[derive(Deserialize)]
+pub struct HassSample{
     pub state:String,
     pub last_updated:String
 }
@@ -75,11 +79,39 @@ impl IoTController{
     }
 
     fn fetch_ev_perc(&self) -> Result<u8, IoTError>{
-        Ok(67)
+        let mut url = self.iot_config.hass_host.clone();
+        url.path_segments_mut().map_err(|_| IoTError::InvalidURL())?.push("api").push("states").push(&self.iot_config.ev_name);
+        let uri = url.to_string();
+
+        let result = self.ureq_agent.get(&uri)
+        .header("Authorization",&format!("Bearer {}", self.iot_config.hass_token))
+        .header("Content-Type", "application/json")
+        .call()?;
+
+        let data:HassSample = result.into_body().read_json()?;
+        let ev_perc:f32 = data.state.parse()?;
+        
+        // possibly add check for data staleness?
+
+        Ok(ev_perc as u8)
     }
 
-    fn fetch_soc_perc(&self) -> Result<u8, IoTError>{
-        Ok(67)
+    fn fetch_soc_perc(&self) -> Result<f32, IoTError>{
+        let mut url = self.iot_config.hass_host.clone();
+        url.path_segments_mut().map_err(|_| IoTError::InvalidURL())?.push("api").push("states").push(&format!("{}_power_battery_soc",self.iot_config.battery_name));
+        let uri = url.to_string();
+
+        let result = self.ureq_agent.get(&uri)
+        .header("Authorization",&format!("Bearer {}", self.iot_config.hass_token))
+        .header("Content-Type", "application/json")
+        .call()?;
+
+        let data:HassSample = result.into_body().read_json()?;
+        let soc:f32 = data.state.parse()?;
+        
+        // possibly add check for data staleness?
+
+        Ok(soc)
     }
 
     pub fn fetch_weather_data(&self, date:Date) -> Result<WeatherData, IoTError>{
@@ -96,8 +128,6 @@ impl IoTController{
         .call()?;
 
         let weather_data:WeatherData = response.into_body().read_json()?;
-
-        println!("Successfully received {} hours of historic weather data for training:", weather_data.hourly.time.iter().count());
 
         Ok(weather_data)
     }
@@ -126,7 +156,7 @@ impl IoTController{
         .header("Authorization",&format!("Bearer {}", self.iot_config.hass_token))
         .header("Content-Type", "application/json")
         .query("end_time", &end)
-        .query("filter_entity_id", &format!("sensor.{}_power_pv_sum", &self.iot_config.battery_name))
+        .query("filter_entity_id", &format!("{}_power_pv_sum", &self.iot_config.battery_name))
         .call()?;
 
         let pv_data_outer:Vec<Vec<PvDataSample>> = result.into_body().read_json()?;

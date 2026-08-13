@@ -93,7 +93,7 @@ impl HomeManager{
     }
 
     pub fn predict(&mut self, date:Date) -> Result<[f64; 24], HomeManagerError>{
-        let data = self.iot_controller.fetch_date_weather_data(date)?;
+        let data = self.iot_controller.fetch_weather_data(date)?;
         Ok(self.ml_engine.infer(&data)?)
     }
 
@@ -119,7 +119,7 @@ impl HomeManager{
 
         // Train step
 
-        let real_weather_data = self.iot_controller.fetch_date_weather_data(y_date)?;
+        let real_weather_data = self.iot_controller.fetch_weather_data(y_date)?;
 
         self.train(&real_solar_data, &real_weather_data)?;
 
