@@ -60,51 +60,29 @@ pub struct EvData{
 
 impl IoTController{
     pub fn new(cfg:IoTConfig) -> Result<Self, IoTError> {
-        
-
         let agent = Agent::new_with_defaults();
 
-        let soc_perc:(u8, Instant) = IoTController::fetch_soc_perc(&agent, &cfg)?;
-        let ev_perc:(u8, Instant) = IoTController::fetch_ev_perc(&agent, &cfg)?;
-        let weather:(WeatherData, Instant) = IoTController::fetch_weather_data(&agent, &cfg)?;
+        
+        let iot_controller  = Self { ureq_agent:agent, iot_config:cfg };
 
-        let iot_controller  = Self { soc_perc:soc_perc, ev_perc:ev_perc, weather_data:weather, ureq_agent:agent, iot_config:cfg };
+        // Check endpoints
+        let tomorrow = (time::OffsetDateTime::now_local()? + Duration::days(1)).date();
+        iot_controller.fetch_soc_perc()?;
+        iot_controller.fetch_ev_perc()?;
+        iot_controller.fetch_weather_data(tomorrow)?;
 
         Ok(iot_controller)
     }
 
-    fn fetch_ev_perc(agent:&Agent, cfg:&IoTConfig) -> Result<(u8, Instant), ureq::Error>{
+    fn fetch_ev_perc(&self) -> Result<(u8, Instant), ureq::Error>{
         Ok((67, Instant::now()))
     } 
 
-    fn fetch_soc_perc(agent:&Agent, cfg:&IoTConfig) -> Result<(u8, Instant), ureq::Error>{
+    fn fetch_soc_perc(&self) -> Result<(u8, Instant), ureq::Error>{
         Ok((67, Instant::now()))
     }
 
-    fn fetch_weather_data(agent:&Agent, cfg:&IoTConfig) -> Result<(WeatherData, Instant), IoTError>{
-        let tomorrow = (time::OffsetDateTime::now_utc().to_offset(time::macros::offset!(+1)) + Duration::days(1)).date().to_string();
-
-        let response = agent
-        .get(&cfg.weather_api_url)
-        .query("latitude", cfg.panel_latitude.to_string())
-        .query("longitude", cfg.panel_longitude.to_string())
-        .query("hourly", "shortwave_radiation,direct_radiation,diffuse_radiation,temperature_2m,cloud_cover")
-        .query("tilt", "30")
-        .query("azimuth", "0")
-        .query("start_date", &tomorrow)
-        .query("end_date", &tomorrow)
-        .query("timezone", "Europe/London")
-        .call()?;
-
-        let weather_data:WeatherData = response.into_body().read_json()?;
-
-        println!("Successfully retrieved {} hours of weather data.", weather_data.hourly.time.iter().count());
-
-        Ok((weather_data, Instant::now()))
-    }
-
-    pub fn fetch_date_weather_data(&self, date:Date) -> Result<WeatherData, IoTError>{
-
+    pub fn fetch_weather_data(&self, date:Date) -> Result<WeatherData, IoTError>{
         let response = self.ureq_agent
         .get(&self.iot_config.weather_api_url)
         .query("latitude", self.iot_config.panel_latitude.to_string())
