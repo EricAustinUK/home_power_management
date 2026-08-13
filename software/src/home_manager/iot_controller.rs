@@ -43,9 +43,6 @@ pub struct IoTConfig {
 
 
 pub struct IoTController{
-    soc_perc:(u8, Instant),
-    ev_perc:(u8, Instant),
-    weather_data:(WeatherData, Instant),
     ureq_agent:Agent,
     iot_config: IoTConfig
 }
@@ -74,32 +71,6 @@ impl IoTController{
         let iot_controller  = Self { soc_perc:soc_perc, ev_perc:ev_perc, weather_data:weather, ureq_agent:agent, iot_config:cfg };
 
         Ok(iot_controller)
-    }
-
-    pub fn get_ev_perc(&mut self, min_cache:Option<Instant>) -> Result<u8, ureq::Error>{
-        let val = match min_cache {
-            Some(min) => match min < self.ev_perc.1 {
-                true => self.ev_perc.0,
-                false => IoTController::fetch_ev_perc( &self.ureq_agent, &self.iot_config)?.0
-            },
-            None => IoTController::fetch_ev_perc( &self.ureq_agent, &self.iot_config)?.0
-        };
-        
-        self.ev_perc = (val, Instant::now());
-        return Ok(val);
-    }
-
-    pub fn get_soc_perc(&mut self, min_cache:Option<Instant>) -> Result<u8, ureq::Error>{
-        let val = match min_cache {
-            Some(min) => match min < self.soc_perc.1 {
-                true => self.soc_perc.0,
-                false => IoTController::fetch_soc_perc( &self.ureq_agent, &self.iot_config)?.0
-            },
-            None => IoTController::fetch_soc_perc( &self.ureq_agent, &self.iot_config)?.0
-        };
-
-        self.soc_perc = (val, Instant::now());
-        return Ok(val);
     }
 
     fn fetch_ev_perc(agent:&Agent, cfg:&IoTConfig) -> Result<(u8, Instant), ureq::Error>{
