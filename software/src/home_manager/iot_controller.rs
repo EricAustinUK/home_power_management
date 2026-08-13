@@ -1,8 +1,8 @@
-use std::{time::{Instant, SystemTime}, str::FromStr};
+use std::{str::FromStr, time::{Instant, SystemTime}};
 use serde::Deserialize;
 use thiserror::Error;
 use ureq::{Agent, http::{Uri, response}};
-use time::{Date, Duration, OffsetDateTime, PlainDateTime, Time, UtcOffset, format_description::well_known::Rfc3339 };
+use time::{Date, Duration, OffsetDateTime, PlainDateTime, Time, UtcDateTime, UtcOffset, format_description::well_known::Rfc3339 };
 use url::Url;
 pub use crate::home_manager::weather_data::{WeatherData, WeatherDataError};
 
@@ -21,7 +21,13 @@ pub enum IoTError {
     LocalTimeError(#[from] time::error::IndeterminateOffset),
 
     #[error("Could not parse date/time recieved from endpoint")]
-    DateConversionError(#[from] time::error::Parse)
+    DateConversionError(#[from] time::error::Parse),
+
+    #[error("Could not parse float recieved from endpoint")]
+    FloatConversionError(#[from] std::num::ParseFloatError),
+
+    #[error("Home assistant returned empty array for history")]
+    InvalidHassResponse(),
 }
 
 pub struct IoTConfig {
@@ -45,9 +51,9 @@ pub struct IoTController{
     iot_config: IoTConfig
 }
 
-#[derive(Deserialize)]
+#[derive(Deserialize, Debug)]
 pub struct PvDataSample{
-    pub state:f64,
+    pub state:String,
     pub last_updated:String
 }
 
@@ -62,9 +68,6 @@ impl IoTController{
         let weather:(WeatherData, Instant) = IoTController::fetch_weather_data(&agent, &cfg)?;
 
         let iot_controller  = Self { soc_perc:soc_perc, ev_perc:ev_perc, weather_data:weather, ureq_agent:agent, iot_config:cfg };
-        //println!("Testing pv value fetch:");
-        //let output = iot_controller.fetch_hourly_solar_output_wh(time::OffsetDateTime::now_utc().date())?;
-        //println!("Values retrieved from home assistant{:?}", output);
 
         Ok(iot_controller)
     }
@@ -93,24 +96,6 @@ impl IoTController{
 
         self.soc_perc = (val, Instant::now());
         return Ok(val);
-    }
-
-    pub fn get_weather_data(&mut self, min_cache:Option<Instant>) -> Result<&WeatherData, IoTError>{
-        match min_cache {
-            Some(min) => match min < self.soc_perc.1 {
-                true => Ok(&self.weather_data.0),
-                false => { 
-                    let new_wd = IoTController::fetch_weather_data( &self.ureq_agent, &self.iot_config)?;
-                    self.weather_data = new_wd;
-                    Ok(&self.weather_data.0)
-                }
-            },
-            None => { 
-                let new_wd = IoTController::fetch_weather_data( &self.ureq_agent, &self.iot_config)?;
-                self.weather_data = new_wd;
-                Ok(&self.weather_data.0)
-            }
-        }
     }
 
     fn fetch_ev_perc(agent:&Agent, cfg:&IoTConfig) -> Result<(u8, Instant), ureq::Error>{
@@ -143,9 +128,7 @@ impl IoTController{
         Ok((weather_data, Instant::now()))
     }
 
-    pub fn fetch_prev_weather_data(&self) -> Result<WeatherData, IoTError>{
-        
-        let today = time::OffsetDateTime::now_local()?.date().to_string();
+    pub fn fetch_date_weather_data(&self, date:Date) -> Result<WeatherData, IoTError>{
 
         let response = self.ureq_agent
         .get(&self.iot_config.weather_api_url)
@@ -154,8 +137,8 @@ impl IoTController{
         .query("hourly", "shortwave_radiation,direct_radiation,diffuse_radiation,temperature_2m,cloud_cover")
         .query("tilt", "30")
         .query("azimuth", "0")
-        .query("start_date", &today)
-        .query("end_date", &today)
+        .query("start_date", date.to_string())
+        .query("end_date", date.to_string())
         .query("timezone", "Europe/London")
         .call()?;
 
@@ -175,30 +158,38 @@ impl IoTController{
         let start: String = start_dt.format(&Rfc3339).unwrap();
 
 
-        let end_time = date.with_time(Time::from_hms(5, 0, 0).unwrap());
+        let end_time = date.with_time(Time::from_hms(21, 0, 0).unwrap());
         let end_dt = end_time.assume_offset(local_offset);
 
         let end: String = end_dt.format(&Rfc3339).unwrap();
 
 
         let mut history_endpoint = self.iot_config.hass_host.clone();
-        history_endpoint.path_segments_mut().map_err(|_| IoTError::InvalidURL())?.push("api").push("").push("period").push(&start);
+        history_endpoint.path_segments_mut().map_err(|_| IoTError::InvalidURL())?.push("api").push("history").push("period").push(&start);
 
         let uri:Uri = Uri::from_str(&history_endpoint.as_str()).map_err(|_| IoTError::InvalidURL())?;
 
-        let result = self.ureq_agent.get(&uri).header("Authorization",&self.iot_config.hass_token)
+        let result = self.ureq_agent.get(&uri)
+        .header("Authorization",&format!("Bearer {}", self.iot_config.hass_token))
+        .header("Content-Type", "application/json")
         .query("end_time", &end)
-        .query("filter_entity_id", format!("sensor.{}_power_pv_sum", &self.iot_config.battery_name))
+        .query("filter_entity_id", &format!("sensor.{}_power_pv_sum", &self.iot_config.battery_name))
         .call()?;
 
-        let pv_data:Vec<PvDataSample> = result.into_body().read_json()?;
+        let pv_data_outer:Vec<Vec<PvDataSample>> = result.into_body().read_json()?;
+
+        println!("{:?}", pv_data_outer);
+        let pv_data = match pv_data_outer.first(){
+            Some(pv_data) => pv_data,
+            None => return Err(IoTError::InvalidHassResponse())
+        };
         let mut prev_t:OffsetDateTime = start_dt;
         let mut this_hour:usize = 5;
 
         let mut response_arr:[f64;24] = [0.; 24];
 
         for sample in pv_data {
-            let pv = sample.state;
+            let pv:f64 = sample.state.parse()?;
             let sample_t = PlainDateTime::parse(&sample.last_updated, &Rfc3339)?.assume_offset(local_offset);
             let t_s = sample_t.unix_timestamp() - prev_t.unix_timestamp();
             let t_h:f64 = t_s as f64 / 3600.;

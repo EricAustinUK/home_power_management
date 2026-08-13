@@ -105,9 +105,9 @@ impl MLEngine{
         }
     }
 
-    pub fn infer(&self, weather:WeatherData) -> Result<[f64; 24], MLError> {
+    pub fn infer(&self, weather:&WeatherData) -> Result<[f64; 24], MLError> {
         let mut result_arr:[f64; 24] = [0.; 24];
-        let features:WeatherFeatures = weather.try_into()?;
+        let features:WeatherFeatures = weather.clone().try_into()?;
         for i in 0..24{
             let result = self.model.predict(features.features.get(i).ok_or(WeatherDataError::DataOverflow())?)?;
             *result_arr.get_mut(i).ok_or(WeatherDataError::DataOverflow())? = result;
@@ -115,8 +115,8 @@ impl MLEngine{
         Ok(result_arr)
     }
 
-    pub fn train(&mut self, real_weather:WeatherData, real_solar:[f64; 24]) -> Result<(), MLError>{
-        let features:WeatherFeatures = real_weather.try_into()?;
+    pub fn train(&mut self, real_weather:&WeatherData, real_solar:&[f64; 24]) -> Result<(), MLError>{
+        let features:WeatherFeatures = real_weather.clone().try_into()?;
         for i in 0..24{
             self.model.learn(&features.features[i], real_solar[i])?;
         }

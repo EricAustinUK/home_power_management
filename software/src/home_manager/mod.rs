@@ -6,6 +6,7 @@ mod weather_data;
 pub use iot_controller::IoTError;
 use iot_controller::{IoTController, IoTConfig};
 use control_panel::PanelState;
+use time::{Date, OffsetDateTime, Time, UtcOffset};
 use url::Url;
 use std::{str::FromStr, sync::{Arc, atomic::{AtomicUsize, Ordering}, mpsc::{Receiver, SendError, Sender}}, time::Instant};
 use rppal::gpio::{Event, InputPin, Trigger};
@@ -14,6 +15,8 @@ use ml_engine::{MLEngine, MLError};
 use thiserror::Error;
 use dotenvy::dotenv;
 use ureq::{get, http::Uri};
+
+use crate::home_manager::weather_data::WeatherData;
 
 #[derive(Debug, Error)]
 pub enum HomeManagerError {
@@ -56,11 +59,11 @@ pub enum DotEnvError {
 }
 
 pub struct HomeManager{
+    pub started:bool,
     grid_cap_wh:usize,
     soc_est_wh:usize,
-    exp_solar_prod_wh:[AtomicUsize; 24],
-    real_solar_prod_wh:[AtomicUsize; 24],
-    exp_house_usg_wh:AtomicUsize,
+    exp_solar_prod_wh:[f64; 24],
+    exp_house_usg_wh:f64,
     control_panel:PanelState,
     iot_controller:IoTController,
     ml_engine:MLEngine,
@@ -72,12 +75,12 @@ impl HomeManager{
         let (tx, rx) = std::sync::mpsc::channel();
         let env = Self::load_env()?;
         
-        Ok(Self { 
+        Ok(Self {
+            started:true,
             grid_cap_wh:3840, 
             soc_est_wh:0, 
-            exp_solar_prod_wh:std::array::from_fn(|_| AtomicUsize::new(0)), // TEMP: CHANGE THIS DISGUSTING AI FIX ASAP
-            real_solar_prod_wh:std::array::from_fn(|_| AtomicUsize::new(0)), // TEMP: CHANGE THIS DISGUSTING AI FIX ASAP
-            exp_house_usg_wh:AtomicUsize::new(6000),
+            exp_solar_prod_wh:[0.; 24],
+            exp_house_usg_wh:6000.,
             control_panel:PanelState::new(&tx)?,
             iot_controller:IoTController::new(env.iot_cfg)?,
             ml_engine:MLEngine::new(env.model_bytes, env.model_data_path)?,
@@ -85,27 +88,80 @@ impl HomeManager{
         })
     }
 
-    pub fn train(&mut self) -> Result<(), HomeManagerError>{
-        let real_weather_data = self.iot_controller.fetch_prev_weather_data()?;
-        let real_solar_data: [f64; 24] = std::array::from_fn(|i| {
-            self.real_solar_prod_wh[i].load(Ordering::Relaxed) as f64
-        });
+    pub fn train(&mut self, real_solar_data:&[f64; 24], real_weather_data:&WeatherData) -> Result<(), HomeManagerError>{
         Ok(self.ml_engine.train(real_weather_data, real_solar_data)?)
     }
 
-    pub fn predict(&mut self) -> Result<(), HomeManagerError>{
-        let data = self.iot_controller.get_weather_data(Some(Instant::now() - Duration::from_mins(30)))?;
-        let predicted = self.ml_engine.infer(data.clone())?;
-        
-        for (hour_val, pred_val) in self.exp_solar_prod_wh.iter().zip(predicted.iter()) {
-            hour_val.store(*pred_val as usize, Ordering::Relaxed);
-        }
-
-        Ok(())
+    pub fn predict(&mut self, date:Date) -> Result<[f64; 24], HomeManagerError>{
+        let data = self.iot_controller.fetch_date_weather_data(date)?;
+        Ok(self.ml_engine.infer(&data)?)
     }
 
     pub fn tgl_pin(&mut self, pin:u8){
         self.control_panel.toggle(pin);
+    }
+
+    pub fn tariff_start(&mut self) -> Result<(), HomeManagerError>{
+        // get previous date
+        let current_time = OffsetDateTime::now_local().map_err(|e| IoTError::from(e))?;
+        let jic_offset = current_time - Duration::from_hours(6);
+        let y_date = jic_offset.date();
+        
+        let real_solar_data = self.iot_controller.fetch_hourly_solar_output_wh(y_date)?;
+        let (real_total, est_total): (f64, f64) = self.exp_solar_prod_wh
+            .iter()
+            .zip(real_solar_data.iter())
+            .fold((0., 0.), |(acc_est, acc_real), (est, real)| {
+                (acc_est + est, acc_real + real)
+            });
+
+        println!("Actual solar output deviated by {}Wh from the expected total.", (real_total - est_total) as i32);
+
+        // Train step
+
+        let real_weather_data = self.iot_controller.fetch_date_weather_data(y_date)?;
+
+        self.train(&real_solar_data, &real_weather_data)?;
+
+        // Inference step
+
+        let t_date = y_date.next_day().unwrap(); // safe to unwrap until the heat death of the universe
+        let exp_solar_out = self.predict(t_date)?;
+        self.exp_solar_prod_wh = exp_solar_out;
+        
+        println!("Expecting solar output to be {}Wh.",  self.exp_solar_prod_wh.iter().fold(0., |acc, n| acc + n));
+
+        // Adjustment step
+
+        // This is the point where I will set the initial battery parameters
+
+        if !self.started {
+            self.started = true;
+        }
+        Ok(())
+    }
+
+    pub fn tariff_end(&mut self) -> Result<(), HomeManagerError>{
+        // set battery parameters back to the original (23%)
+        Ok(())
+    }
+
+    pub fn tariff_update(&mut self) -> Result<(), HomeManagerError>{
+        // get time
+        let current_time = OffsetDateTime::now_local().map_err(|e| IoTError::from(e))?;
+        let jic_offset = current_time + Duration::from_hours(6);
+        let t_date = jic_offset.date();
+        
+        // Inference step
+
+        let exp_solar_out = self.predict(t_date)?;
+        self.exp_solar_prod_wh = exp_solar_out;
+        
+        // Adjustment step
+
+        // change battery parameters
+
+        Ok(())
     }
 
     fn load_env() -> Result<HomeManagerEnv, DotEnvError>{

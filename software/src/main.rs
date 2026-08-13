@@ -3,9 +3,18 @@ mod home_manager;
 use std::{thread::sleep, time::Duration};
 
 use home_manager::{HomeManager, HomeManagerError, IoTError};
+use time::{OffsetDateTime, Time, macros::time};
 
 const INIT_ATTEMPTS:u8 = 5;
 const ATTEMPT_DELAY_S:u64 = 60;
+const TARIFF_START:Time = time!(23:30);
+const TARIFF_END:Time = time!(5:30);
+
+#[derive(Clone)]
+enum State{
+    Tariff,
+    Standard
+}
 
 fn main() -> Result<(), Box<dyn std::error::Error>>{
     let mut home_manager = match  HomeManager::new() {
@@ -51,14 +60,34 @@ fn main() -> Result<(), Box<dyn std::error::Error>>{
 
     // TODO: move all this logic into the homemanager class
     
+    let mut state:State = State::Standard; // always set to standard, since HomeManager starts on the edge, and standard -> standard only manages EV state
+
     loop{
-        match home_manager.gpio_rx.recv_timeout(Duration::from_mins(5)){
+        match home_manager.gpio_rx.recv_timeout(Duration::from_mins(20)){
             Ok(pin) => {
                 home_manager.tgl_pin(pin);
                 println!("Rising edge on pin {pin}");
             },
             Err(std::sync::mpsc::RecvTimeoutError::Timeout) => {
-                // handle scheduled tasks here
+                let now = OffsetDateTime::now_local()?;
+                let new_state = if now.time() > TARIFF_END && now.time() < TARIFF_START {State::Standard} else {State::Tariff};
+
+                match (state.clone(), new_state.clone()) {
+                    (State::Tariff, State::Standard) => {
+                        home_manager.tariff_end()?;
+                    },
+                    (State::Tariff, State::Tariff) => {
+                        home_manager.tariff_update()?;
+                    },
+                    (State::Standard, State::Tariff) => {
+                        home_manager.tariff_start()?;
+                    },
+                    (State::Standard, State::Standard) => ()
+                }
+
+                // EV handling here
+
+                state = new_state;
             },
             Err(e) => {
                 return Err(Box::new(e));
