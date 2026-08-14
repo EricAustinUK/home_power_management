@@ -227,7 +227,7 @@ impl IoTController{
         let uri = url.to_string();
 
         let body = format!(r#"{{
-            "entity_id": "number.{}",
+            "entity_id": "number.{}_backup_reserve_level",
             "value": {}
         }}"#, self.iot_config.battery_name, perc);
 
