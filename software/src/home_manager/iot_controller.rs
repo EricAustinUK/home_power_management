@@ -107,7 +107,7 @@ impl IoTController{
         // possibly add check for data staleness?
 
         let mut url = self.iot_config.hass_host.clone();
-        url.path_segments_mut().map_err(|_| IoTError::InvalidURL())?.push("api").push("states").push(&format!("sensor.{}_plug", &self.iot_config.ev_name));
+        url.path_segments_mut().map_err(|_| IoTError::InvalidURL())?.push("api").push("states").push(&format!("binary_sensor.{}_plug", &self.iot_config.ev_name));
         let uri = url.to_string();
 
         let result = self.ureq_agent.get(&uri)
@@ -205,7 +205,7 @@ impl IoTController{
 
             if sample_t.hour() as usize == this_hour{
                 response_arr[this_hour] += pv * t_h;
-            }else if (sample_t.hour() as usize == this_hour + 1){
+            }else if sample_t.hour() as usize == this_hour + 1{
                 let split_s =  sample_t.date().with_hms(sample_t.hour(), 0, 0).unwrap().assume_offset(local_offset).unix_timestamp() - prev_t.unix_timestamp();
                 response_arr[this_hour] += pv * (split_s as f64 / t_s as f64)/3600.;
                 response_arr[this_hour+1] = pv * ((t_s - split_s) as f64 / t_s as f64)/3600.;
