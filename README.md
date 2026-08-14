@@ -47,3 +47,7 @@ The model and inference path were developed with the Pi Zero W's hardware limita
    ssh $PI_USER@$PI_HOST "chmod +x ~/home_assist && ~/home_assist"
    ```
    (also available as the "deploy to pi" / "run on pi" tasks in `.vscode/tasks.json`)
+
+## License
+
+MIT, see [LICENSE](LICENSE)
