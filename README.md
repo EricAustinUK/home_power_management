@@ -17,10 +17,10 @@ The model and inference path were developed with the Pi Zero W's hardware limita
 
 | Metric | Value |
 |---|---|
-| Model size on disk | [282B] |
-| Model data size on disk | [99KB] |
-| Inference latency (Pi Zero W) | [1.51ms] |
-| RAM footprint | [3664KB] |
+| Model size on disk | 282B |
+| Model data size on disk | 99KB |
+| Inference latency (Pi Zero W) | 1.51ms |
+| RAM footprint | 3664KB |
 
 ## Hardware
 
