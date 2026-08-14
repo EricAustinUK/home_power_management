@@ -19,6 +19,16 @@ pub struct WeatherData{
     pub hourly: HourData
 }
 
+#[derive(Clone, Deserialize)]
+pub struct HourData {
+    pub time: [String; 24],
+    pub shortwave_radiation: [f32; 24],
+    pub direct_radiation: [f32; 24],
+    pub diffuse_radiation: [f32; 24],
+    pub cloud_cover: [f32; 24],
+    pub temperature_2m: [f32; 24]
+}
+
 impl TryInto<WeatherFeatures> for WeatherData {
     type Error = WeatherDataError;
     fn try_into(self) -> Result<WeatherFeatures, Self::Error> {
@@ -102,14 +112,4 @@ impl TryInto<WeatherFeatures> for WeatherData {
 
         Ok(result)
     }
-}
-
-#[derive(Clone, Deserialize)]
-pub struct HourData {
-    pub time: [String; 24],
-    pub shortwave_radiation: [f32; 24],
-    pub direct_radiation: [f32; 24],
-    pub diffuse_radiation: [f32; 24],
-    pub cloud_cover: [f32; 24],
-    pub temperature_2m: [f32; 24]
 }
