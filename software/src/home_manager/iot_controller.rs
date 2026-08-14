@@ -94,7 +94,7 @@ impl IoTController{
         // possibly add check for data staleness?
 
         let mut url = self.iot_config.hass_host.clone();
-        url.path_segments_mut().map_err(|_| IoTError::InvalidURL())?.push("api").push(&format!("device_tracker.{}_location", &self.iot_config.ev_name));
+        url.path_segments_mut().map_err(|_| IoTError::InvalidURL())?.push("api").push("states").push(&format!("device_tracker.{}_location", &self.iot_config.ev_name));
         let uri = url.to_string();
 
         let result = self.ureq_agent.get(&uri)
