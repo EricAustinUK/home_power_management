@@ -83,23 +83,23 @@ impl HomeManager{
         })
     }
 
-    pub fn start_benchmark(&self){
+    pub fn start_benchmark(&mut self){
         println!("Starting benchmark...");
 
         // get previous date
-        let current_time = OffsetDateTime::now_local().map_err(|e| IoTError::from(e))?;
+        let current_time = OffsetDateTime::now_local().map_err(|e| IoTError::from(e)).unwrap();
         let jic_offset_y = current_time - Duration::from_hours(24);
         let jic_offset_tm = current_time - Duration::from_hours(24);
         let y_date = jic_offset_y.date();
         let tm_date = jic_offset_tm.date();
         
         println!("--- INFERENCE ---");
-        self.predict(tm_date);
+        self.predict(tm_date).unwrap();
         
         println!("--- TRAINING ---");
         let real_solar_data = self.iot_controller.fetch_hourly_solar_output_wh(y_date).unwrap();
         let real_weather_data = self.iot_controller.fetch_weather_data(y_date).unwrap();
-        self.train(&real_solar_data, &real_weather_data);
+        self.train(&real_solar_data, &real_weather_data).unwrap();
 
         println!("--- MODEL FOOTPRINT ---");
         println!("{}KB", self.benchmark_get_program_kb().unwrap());
@@ -220,7 +220,7 @@ impl HomeManager{
     pub fn benchmark_get_program_kb(&self) -> Option<u64> {
         std::fs::read_to_string("/proc/self/status").ok()?
             .lines()
-            .find(|l| l.starts_with("VmPeak"))?
+            .find(|l| l.starts_with("VmRSS"))?
             .split_whitespace()
             .nth(1)?
             .parse().ok()
