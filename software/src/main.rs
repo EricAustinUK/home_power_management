@@ -85,7 +85,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>>{
                     (State::Standard, State::Standard) => ()
                 }
 
-                home_manager.update_ev_charger();
+                home_manager.update_ev_charger()?;
 
                 state = new_state;
             },

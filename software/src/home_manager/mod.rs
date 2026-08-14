@@ -232,12 +232,12 @@ impl HomeManager{
             },
             Err(e) => return Err(DotEnvError::MissingEnvVar { name: "WEATHER_API_URL", err: e })
         };
-        let panel_latitude:f32 = match env::var("PANEL_LATITUTDE"){
+        let panel_latitude:f32 = match env::var("PANEL_LATITUDE"){
             Ok(lat_str) => match lat_str.parse::<f32>(){
                 Ok(lat) => lat,
-                Err(_) => return Err(DotEnvError::EnvValueParse { name: "PANEL_LATITUTDE" })
+                Err(_) => return Err(DotEnvError::EnvValueParse { name: "PANEL_LATITUDE" })
             },
-            Err(e) => return Err(DotEnvError::MissingEnvVar { name: "PANEL_LATITUTDE", err: e })
+            Err(e) => return Err(DotEnvError::MissingEnvVar { name: "PANEL_LATITUDE", err: e })
         };
         let panel_longitude:f32 = match env::var("PANEL_LONGITUDE"){
             Ok(lon_str) => match lon_str.parse::<f32>(){
