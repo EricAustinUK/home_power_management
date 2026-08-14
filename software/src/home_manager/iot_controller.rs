@@ -80,7 +80,7 @@ impl IoTController{
 
     fn fetch_ev_perc(&self) -> Result<u8, IoTError>{
         let mut url = self.iot_config.hass_host.clone();
-        url.path_segments_mut().map_err(|_| IoTError::InvalidURL())?.push("api").push("states").push(&self.iot_config.ev_name);
+        url.path_segments_mut().map_err(|_| IoTError::InvalidURL())?.push("api").push("states").push(&format!("sensor.{}", &self.iot_config.ev_name));
         let uri = url.to_string();
 
         let result = self.ureq_agent.get(&uri)
@@ -98,7 +98,7 @@ impl IoTController{
 
     fn fetch_soc_perc(&self) -> Result<f32, IoTError>{
         let mut url = self.iot_config.hass_host.clone();
-        url.path_segments_mut().map_err(|_| IoTError::InvalidURL())?.push("api").push("states").push(&format!("{}_power_battery_soc",self.iot_config.battery_name));
+        url.path_segments_mut().map_err(|_| IoTError::InvalidURL())?.push("api").push("states").push(&format!("sensor.{}_power_battery_soc",self.iot_config.battery_name));
         let uri = url.to_string();
 
         let result = self.ureq_agent.get(&uri)
@@ -112,6 +112,41 @@ impl IoTController{
         // possibly add check for data staleness?
 
         Ok(soc)
+    }
+
+    fn set_min_soc(&self, perc:u8) -> Result<(), IoTError>{
+        let mut url = self.iot_config.hass_host.clone();
+        url.path_segments_mut().map_err(|_| IoTError::InvalidURL())?.push("api").push("services").push("number").push("set_value");
+        let uri = url.to_string();
+
+        let body = format!(r#"{{
+            "entity_id": "{}",
+            "value": {}
+        }}"#, self.iot_config.battery_name, perc);
+
+        self.ureq_agent.post(&uri)
+        .header("Authorization",&format!("Bearer {}", self.iot_config.hass_token))
+        .header("Content-Type", "application/json")
+        .send(body)?;
+
+        Ok(())
+    }
+
+    fn set_ev_charger(&self, state:bool) -> Result<(), IoTError>{
+        let mut url = self.iot_config.hass_host.clone();
+        url.path_segments_mut().map_err(|_| IoTError::InvalidURL())?.push("api").push("services").push("switch").push(if state {"turn_on"} else { "turn_off" } );
+        let uri = url.to_string();
+
+        let body = format!(r#"{{
+            "entity_id": "{}"
+        }}"#, self.iot_config.ev_charger_name);
+
+        self.ureq_agent.post(&uri)
+        .header("Authorization",&format!("Bearer {}", self.iot_config.hass_token))
+        .header("Content-Type", "application/json")
+        .send(body)?;
+
+        Ok(())
     }
 
     pub fn fetch_weather_data(&self, date:Date) -> Result<WeatherData, IoTError>{
@@ -156,7 +191,7 @@ impl IoTController{
         .header("Authorization",&format!("Bearer {}", self.iot_config.hass_token))
         .header("Content-Type", "application/json")
         .query("end_time", &end)
-        .query("filter_entity_id", &format!("{}_power_pv_sum", &self.iot_config.battery_name))
+        .query("filter_entity_id", &format!("sensor.{}_power_pv_sum", &self.iot_config.battery_name))
         .call()?;
 
         let pv_data_outer:Vec<Vec<PvDataSample>> = result.into_body().read_json()?;
