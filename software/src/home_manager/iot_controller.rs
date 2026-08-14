@@ -1,8 +1,8 @@
-use std::{str::FromStr, time::{Instant, SystemTime}};
+use std::{str::FromStr};
 use serde::Deserialize;
 use thiserror::Error;
-use ureq::{Agent, http::{Uri, response}};
-use time::{Date, Duration, OffsetDateTime, PlainDateTime, Time, UtcDateTime, UtcOffset, format_description::well_known::Rfc3339 };
+use ureq::{Agent, http::{Uri}};
+use time::{Date, Duration, OffsetDateTime, PlainDateTime, Time, UtcOffset, format_description::well_known::Rfc3339 };
 use url::Url;
 pub use crate::home_manager::weather_data::{WeatherData, WeatherDataError};
 
@@ -72,15 +72,15 @@ impl IoTController{
         // Check endpoints
         let tomorrow = (time::OffsetDateTime::now_local()? + Duration::days(1)).date();
         iot_controller.fetch_soc_perc()?;
-        iot_controller.fetch_ev_perc()?;
+        iot_controller.fetch_ev_info()?;
         iot_controller.fetch_weather_data(tomorrow)?;
 
         Ok(iot_controller)
     }
 
-    fn fetch_ev_perc(&self) -> Result<u8, IoTError>{
+    fn fetch_ev_info(&self) -> Result<(u8, bool, bool), IoTError>{
         let mut url = self.iot_config.hass_host.clone();
-        url.path_segments_mut().map_err(|_| IoTError::InvalidURL())?.push("api").push("states").push(&format!("sensor.{}", &self.iot_config.ev_name));
+        url.path_segments_mut().map_err(|_| IoTError::InvalidURL())?.push("api").push("states").push(&format!("sensor.{}_battery_level", &self.iot_config.ev_name));
         let uri = url.to_string();
 
         let result = self.ureq_agent.get(&uri)
@@ -88,12 +88,38 @@ impl IoTController{
         .header("Content-Type", "application/json")
         .call()?;
 
-        let data:HassSample = result.into_body().read_json()?;
-        let ev_perc:f32 = data.state.parse()?;
+        let perc_data:HassSample = result.into_body().read_json()?;
+        let ev_perc:f32 = perc_data.state.parse()?;
         
         // possibly add check for data staleness?
 
-        Ok(ev_perc as u8)
+        let mut url = self.iot_config.hass_host.clone();
+        url.path_segments_mut().map_err(|_| IoTError::InvalidURL())?.push("api").push("device_tracker").push(&format!("{}_location", &self.iot_config.ev_name));
+        let uri = url.to_string();
+
+        let result = self.ureq_agent.get(&uri)
+        .header("Authorization",&format!("Bearer {}", self.iot_config.hass_token))
+        .header("Content-Type", "application/json")
+        .call()?;
+
+        let charge_state_data:HassSample = result.into_body().read_json()?;
+
+        // possibly add check for data staleness?
+
+        let mut url = self.iot_config.hass_host.clone();
+        url.path_segments_mut().map_err(|_| IoTError::InvalidURL())?.push("api").push("states").push(&format!("sensor.{}_plug", &self.iot_config.ev_name));
+        let uri = url.to_string();
+
+        let result = self.ureq_agent.get(&uri)
+        .header("Authorization",&format!("Bearer {}", self.iot_config.hass_token))
+        .header("Content-Type", "application/json")
+        .call()?;
+
+        let plug_state_data:HassSample = result.into_body().read_json()?;
+
+        // possibly add check for data staleness?
+
+        Ok((ev_perc as u8, charge_state_data.state == "home", plug_state_data.state == "on"))
     }
 
     fn fetch_soc_perc(&self) -> Result<f32, IoTError>{
@@ -138,7 +164,7 @@ impl IoTController{
         let uri = url.to_string();
 
         let body = format!(r#"{{
-            "entity_id": "{}"
+            "entity_id": "switch.{}"
         }}"#, self.iot_config.ev_charger_name);
 
         self.ureq_agent.post(&uri)

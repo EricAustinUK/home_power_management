@@ -1,6 +1,5 @@
-use std::{sync::mpsc::{Receiver, Sender}, time::Duration};
-
-use rppal::gpio::{Event, Gpio, InputPin, Level, OutputPin, Trigger};
+use std::{sync::mpsc::Sender, time::Duration};
+use rppal::gpio::{Gpio, InputPin, Level, OutputPin, Trigger};
 
 pub struct PanelState {
     pub app_1: bool,

@@ -6,15 +6,14 @@ mod weather_data;
 pub use iot_controller::IoTError;
 use iot_controller::{IoTController, IoTConfig};
 use control_panel::PanelState;
-use time::{Date, OffsetDateTime, Time, UtcOffset};
+use time::{Date, OffsetDateTime};
 use url::Url;
-use std::{str::FromStr, sync::{Arc, atomic::{AtomicUsize, Ordering}, mpsc::{Receiver, SendError, Sender}}, time::Instant};
-use rppal::gpio::{Event, InputPin, Trigger};
+use std::{str::FromStr, sync::mpsc::{Receiver}};
 use std::{env, time::Duration};
 use ml_engine::{MLEngine, MLError};
 use thiserror::Error;
 use dotenvy::dotenv;
-use ureq::{get, http::Uri};
+use ureq::{http::Uri};
 
 use crate::home_manager::weather_data::WeatherData;
 
@@ -61,7 +60,6 @@ pub enum DotEnvError {
 pub struct HomeManager{
     pub started:bool,
     grid_cap_wh:usize,
-    soc_est_wh:usize,
     exp_solar_prod_wh:[f64; 24],
     exp_house_usg_wh:f64,
     control_panel:PanelState,
@@ -77,8 +75,7 @@ impl HomeManager{
         
         Ok(Self {
             started:true,
-            grid_cap_wh:3840, 
-            soc_est_wh:0, 
+            grid_cap_wh:3840,
             exp_solar_prod_wh:[0.; 24],
             exp_house_usg_wh:3600.,
             control_panel:PanelState::new(&tx)?,
@@ -180,6 +177,10 @@ impl HomeManager{
             let need_perc = need_perc_raw.round() as u8;
             self.iot_controller.set_min_soc(23 + need_perc)
         }
+    }
+
+    pub fn update_ev_charger(&self){
+        
     }
 
     fn load_env() -> Result<HomeManagerEnv, DotEnvError>{
