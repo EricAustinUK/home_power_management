@@ -1,0 +1,14 @@
+[package]
+name = "ml"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+csv = "1.4.0"
+linfa = "0.8.1"
+linfa-elasticnet = "0.8.1"
+linfa-linear = "0.8.1"
+ndarray = "0.16.1"
+postcard = { version="1.1.3", features=["alloc"] }
+rill-ml = "1.1.0"
+serde = "1.0.229"
