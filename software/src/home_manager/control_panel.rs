@@ -3,9 +3,9 @@ use std::{sync::mpsc::{Receiver, Sender}, time::Duration};
 use rppal::gpio::{Event, Gpio, InputPin, Level, OutputPin, Trigger};
 
 pub struct PanelState {
-    app_1: bool,
-    app_2: bool,
-    app_3: bool,
+    pub app_1: bool,
+    pub app_2: bool,
+    pub app_3: bool,
     leds: [OutputPin; 3],
     _tgl_pins: Vec<InputPin>
 }

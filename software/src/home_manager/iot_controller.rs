@@ -114,7 +114,7 @@ impl IoTController{
         Ok(soc)
     }
 
-    fn set_min_soc(&self, perc:u8) -> Result<(), IoTError>{
+    pub fn set_min_soc(&self, perc:u8) -> Result<(), IoTError>{
         let mut url = self.iot_config.hass_host.clone();
         url.path_segments_mut().map_err(|_| IoTError::InvalidURL())?.push("api").push("services").push("number").push("set_value");
         let uri = url.to_string();
@@ -132,7 +132,7 @@ impl IoTController{
         Ok(())
     }
 
-    fn set_ev_charger(&self, state:bool) -> Result<(), IoTError>{
+    pub fn set_ev_charger(&self, state:bool) -> Result<(), IoTError>{
         let mut url = self.iot_config.hass_host.clone();
         url.path_segments_mut().map_err(|_| IoTError::InvalidURL())?.push("api").push("services").push("switch").push(if state {"turn_on"} else { "turn_off" } );
         let uri = url.to_string();

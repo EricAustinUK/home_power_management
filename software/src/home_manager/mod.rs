@@ -80,7 +80,7 @@ impl HomeManager{
             grid_cap_wh:3840, 
             soc_est_wh:0, 
             exp_solar_prod_wh:[0.; 24],
-            exp_house_usg_wh:6000.,
+            exp_house_usg_wh:3600.,
             control_panel:PanelState::new(&tx)?,
             iot_controller:IoTController::new(env.iot_cfg)?,
             ml_engine:MLEngine::new(env.model_bytes, env.model_data_path)?,
@@ -133,7 +133,7 @@ impl HomeManager{
 
         // Adjustment step
 
-        // This is the point where I will set the initial battery parameters
+        self.update_soc_target()?;
 
         if !self.started {
             self.started = true;
@@ -142,7 +142,7 @@ impl HomeManager{
     }
 
     pub fn tariff_end(&mut self) -> Result<(), HomeManagerError>{
-        // set battery parameters back to the original (23%)
+        self.iot_controller.set_min_soc(23)?;
         Ok(())
     }
 
@@ -159,9 +159,27 @@ impl HomeManager{
         
         // Adjustment step
 
-        // change battery parameters
+        self.update_soc_target()?;
 
         Ok(())
+    }
+
+    fn update_soc_target(&mut self) -> Result<(), IoTError>{
+        let mut est_usage = self.exp_house_usg_wh;
+        if self.control_panel.app_1 {est_usage+=2400.}; // TODO: add env for app Wh config
+        if self.control_panel.app_2 {est_usage+=0.};
+        if self.control_panel.app_3 {est_usage+=0.};
+
+        let total_solar:f64 = self.exp_solar_prod_wh.iter().fold(0., |acc, n| acc + n);
+        
+        let need_wh = est_usage - total_solar;
+        if need_wh <= 0.{
+            self.iot_controller.set_min_soc(23)
+        }else{
+            let need_perc_raw = (need_wh * 100. / 1920.).min(100.-23.);
+            let need_perc = need_perc_raw.round() as u8;
+            self.iot_controller.set_min_soc(23 + need_perc)
+        }
     }
 
     fn load_env() -> Result<HomeManagerEnv, DotEnvError>{
