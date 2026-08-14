@@ -59,7 +59,6 @@ pub enum DotEnvError {
 
 pub struct HomeManager{
     pub started:bool,
-    grid_cap_wh:usize,
     exp_solar_prod_wh:[f64; 24],
     exp_house_usg_wh:f64,
     control_panel:PanelState,
@@ -75,7 +74,6 @@ impl HomeManager{
         
         Ok(Self {
             started:true,
-            grid_cap_wh:3840,
             exp_solar_prod_wh:[0.; 24],
             exp_house_usg_wh:3600.,
             control_panel:PanelState::new(&tx)?,
@@ -173,14 +171,24 @@ impl HomeManager{
         if need_wh <= 0.{
             self.iot_controller.set_min_soc(23)
         }else{
-            let need_perc_raw = (need_wh * 100. / 1920.).min(100.-23.);
+            let need_perc_raw = (need_wh * 100. / 1920.).min(95.-23.);
             let need_perc = need_perc_raw.round() as u8;
             self.iot_controller.set_min_soc(23 + need_perc)
         }
     }
 
-    pub fn update_ev_charger(&self){
-        
+    pub fn update_ev_charger(&self) -> Result<(), IoTError>{
+        // should obtain a value from the variable resistor on the control panel, but for now just the limit of 95%
+        let target_perc = 95;
+        match self.iot_controller.fetch_ev_info()?{
+            (soc, true, true) => {
+                if soc >= target_perc {
+                    return self.iot_controller.set_ev_charger(false)
+                }
+            },
+            (_,_,_) => ()
+        };
+        self.iot_controller.set_ev_charger(true)
     }
 
     fn load_env() -> Result<HomeManagerEnv, DotEnvError>{

@@ -78,7 +78,7 @@ impl IoTController{
         Ok(iot_controller)
     }
 
-    fn fetch_ev_info(&self) -> Result<(u8, bool, bool), IoTError>{
+    pub fn fetch_ev_info(&self) -> Result<(u8, bool, bool), IoTError>{
         let mut url = self.iot_config.hass_host.clone();
         url.path_segments_mut().map_err(|_| IoTError::InvalidURL())?.push("api").push("states").push(&format!("sensor.{}_battery_level", &self.iot_config.ev_name));
         let uri = url.to_string();
@@ -140,40 +140,6 @@ impl IoTController{
         Ok(soc)
     }
 
-    pub fn set_min_soc(&self, perc:u8) -> Result<(), IoTError>{
-        let mut url = self.iot_config.hass_host.clone();
-        url.path_segments_mut().map_err(|_| IoTError::InvalidURL())?.push("api").push("services").push("number").push("set_value");
-        let uri = url.to_string();
-
-        let body = format!(r#"{{
-            "entity_id": "{}",
-            "value": {}
-        }}"#, self.iot_config.battery_name, perc);
-
-        self.ureq_agent.post(&uri)
-        .header("Authorization",&format!("Bearer {}", self.iot_config.hass_token))
-        .header("Content-Type", "application/json")
-        .send(body)?;
-
-        Ok(())
-    }
-
-    pub fn set_ev_charger(&self, state:bool) -> Result<(), IoTError>{
-        let mut url = self.iot_config.hass_host.clone();
-        url.path_segments_mut().map_err(|_| IoTError::InvalidURL())?.push("api").push("services").push("switch").push(if state {"turn_on"} else { "turn_off" } );
-        let uri = url.to_string();
-
-        let body = format!(r#"{{
-            "entity_id": "switch.{}"
-        }}"#, self.iot_config.ev_charger_name);
-
-        self.ureq_agent.post(&uri)
-        .header("Authorization",&format!("Bearer {}", self.iot_config.hass_token))
-        .header("Content-Type", "application/json")
-        .send(body)?;
-
-        Ok(())
-    }
 
     pub fn fetch_weather_data(&self, date:Date) -> Result<WeatherData, IoTError>{
         let response = self.ureq_agent
@@ -252,6 +218,42 @@ impl IoTController{
         }
 
         Ok(response_arr)
+    }
+
+
+    pub fn set_min_soc(&self, perc:u8) -> Result<(), IoTError>{
+        let mut url = self.iot_config.hass_host.clone();
+        url.path_segments_mut().map_err(|_| IoTError::InvalidURL())?.push("api").push("services").push("number").push("set_value");
+        let uri = url.to_string();
+
+        let body = format!(r#"{{
+            "entity_id": "{}",
+            "value": {}
+        }}"#, self.iot_config.battery_name, perc);
+
+        self.ureq_agent.post(&uri)
+        .header("Authorization",&format!("Bearer {}", self.iot_config.hass_token))
+        .header("Content-Type", "application/json")
+        .send(body)?;
+
+        Ok(())
+    }
+
+    pub fn set_ev_charger(&self, state:bool) -> Result<(), IoTError>{
+        let mut url = self.iot_config.hass_host.clone();
+        url.path_segments_mut().map_err(|_| IoTError::InvalidURL())?.push("api").push("services").push("switch").push(if state {"turn_on"} else { "turn_off" } );
+        let uri = url.to_string();
+
+        let body = format!(r#"{{
+            "entity_id": "switch.{}"
+        }}"#, self.iot_config.ev_charger_name);
+
+        self.ureq_agent.post(&uri)
+        .header("Authorization",&format!("Bearer {}", self.iot_config.hass_token))
+        .header("Content-Type", "application/json")
+        .send(body)?;
+
+        Ok(())
     }
 
 }
