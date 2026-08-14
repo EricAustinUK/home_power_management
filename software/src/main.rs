@@ -58,6 +58,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>>{
         }
     };
 
+    home_manager.start_benchmark();
+
     // TODO: move all this logic into the homemanager class
     
     let mut state:State = State::Standard; // always set to standard, since HomeManager starts on the edge, and standard -> standard only manages EV state

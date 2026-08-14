@@ -1,4 +1,4 @@
-use std::path::PathBuf;
+use std::{path::PathBuf, time::Instant};
 
 use crate::home_manager::{iot_controller::{WeatherData, WeatherDataError}};
 use rill_ml::{
@@ -106,12 +106,17 @@ impl MLEngine{
     }
 
     pub fn infer(&self, weather:&WeatherData) -> Result<[f64; 24], MLError> {
+        let start = Instant::now();
         let mut result_arr:[f64; 24] = [0.; 24];
+        println!("Starting inference...");
         let features:WeatherFeatures = weather.clone().try_into()?;
         for i in 0..24{
             let result = self.model.predict(features.features.get(i).ok_or(WeatherDataError::DataOverflow())?)?;
             *result_arr.get_mut(i).ok_or(WeatherDataError::DataOverflow())? = result;
         }
+        let end = Instant::now();
+        let inference_time = end-start; 
+        println!("Inference completed in {}ms", inference_time.as_millis());
         Ok(result_arr)
     }
 
