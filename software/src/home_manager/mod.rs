@@ -101,12 +101,12 @@ impl HomeManager{
         let real_weather_data = self.iot_controller.fetch_weather_data(y_date).unwrap();
         self.train(&real_solar_data, &real_weather_data).unwrap();
 
-        println!("--- MODEL FOOTPRINT ---");
+        println!("--- PROGRAM MEMORY FOOTPRINT ---");
         println!("{}KB", self.benchmark_get_program_kb().unwrap());
 
         println!("--- MODEL SIZE ON DISK ---");
         println!("Model: {}B", std::fs::metadata("model.bin").unwrap().len());
-        println!("Model data: {}B", std::fs::metadata("model_data.bin").unwrap().len());
+        println!("Model data: {}KB", std::fs::metadata("model_data.bin").unwrap().len()/1000);
     }
 
     pub fn train(&mut self, real_solar_data:&[f64; 24], real_weather_data:&WeatherData) -> Result<(), HomeManagerError>{

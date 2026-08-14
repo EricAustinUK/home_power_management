@@ -116,7 +116,7 @@ impl MLEngine{
         }
         let end = Instant::now();
         let inference_time = end-start; 
-        println!("Inference completed in {}ms", inference_time.as_millis());
+        println!("Inference completed in {} microseconds", inference_time.as_micros());
         Ok(result_arr)
     }
 
