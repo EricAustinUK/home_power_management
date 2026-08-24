@@ -1,0 +1,6 @@
+country=YOUR_COUNTRY_CODE
+
+network={
+	ssid="YOUR_SSID"
+	psk="YOUR_PASS"
+}

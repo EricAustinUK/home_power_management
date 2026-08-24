@@ -1,0 +1,1 @@
+include $(sort $(wildcard $(BR2_EXTERNAL_HOME_POWER_MANAGER_PATH)/package/*/*.mk))
