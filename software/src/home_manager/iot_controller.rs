@@ -1,8 +1,8 @@
-use std::{str::FromStr};
+use std::{str::FromStr, time::Duration};
 use serde::Deserialize;
 use thiserror::Error;
 use ureq::{Agent, http::{Uri}};
-use time::{Date, Duration, OffsetDateTime, PlainDateTime, Time, UtcOffset, format_description::well_known::Rfc3339 };
+use time::{Date, OffsetDateTime, PlainDateTime, Time, UtcOffset, format_description::well_known::Rfc3339 };
 use url::Url;
 pub use crate::home_manager::weather_data::{WeatherData, WeatherDataError};
 
@@ -64,13 +64,17 @@ pub struct HassSample{
 
 impl IoTController{
     pub fn new(cfg:IoTConfig) -> Result<Self, IoTError> {
-        let agent = Agent::new_with_defaults();
+        let agent_cfg = Agent::config_builder()
+        .timeout_global(Some(Duration::from_secs(10)))
+        .build();
+
+        let agent = agent_cfg.into();
 
         
         let iot_controller  = Self { ureq_agent:agent, iot_config:cfg };
 
         // Check endpoints
-        let tomorrow = (time::OffsetDateTime::now_local()? + Duration::days(1)).date();
+        let tomorrow = (time::OffsetDateTime::now_local()? + Duration::from_hours(24)).date();
         iot_controller.fetch_soc_perc()?;
         iot_controller.fetch_ev_info()?;
         iot_controller.fetch_weather_data(tomorrow)?;

@@ -117,6 +117,26 @@ impl MLEngine{
 
     pub fn train(&mut self, real_weather:&WeatherData, real_solar:&[f64; 24]) -> Result<(), MLError>{
         let features:WeatherFeatures = real_weather.clone().try_into()?;
+
+        // TODO: Include backup file
+        match std::fs::read(&self.data_path){
+            Ok(buf) => {
+                let mut current_data:Vec<[f64; 10]> = postcard::from_bytes(&buf)?;
+                let mut new_data:Vec<[f64; 10]> = features.features.iter().zip(real_solar).map(|(f, o)| {
+                    let mut ret = [0.; 10];
+                    for i in 0..9{
+                        ret[i] = f[i];
+                    }
+                    ret[9] = *o;
+                    ret
+                })
+                .collect();
+                current_data.append(&mut new_data);
+                std::fs::write(&self.data_path, postcard::to_allocvec(&current_data)? )?;
+            },
+            Err(_) => println!("Error reading model file. Continuing to training step")
+        };
+
         for i in 0..24{
             self.model.learn(&features.features[i], real_solar[i])?;
         }
