@@ -32,6 +32,12 @@ pub enum HomeManagerError {
     DotEnv(#[from] DotEnvError),
 }
 
+#[derive(Clone)]
+pub enum State{
+    Tariff,
+    Standard
+}
+
 struct HomeManagerEnv{
     pub iot_cfg:IoTConfig,
     pub model_bytes:Option<Vec<u8>>,
@@ -58,7 +64,6 @@ pub enum DotEnvError {
 }
 
 pub struct HomeManager{
-    pub started:bool,
     exp_solar_prod_wh:[f64; 24],
     exp_house_usg_wh:f64,
     control_panel:PanelState,
@@ -73,7 +78,6 @@ impl HomeManager{
         let env = Self::load_env()?;
         
         Ok(Self {
-            started:true,
             exp_solar_prod_wh:[0.; 24],
             exp_house_usg_wh:3600.,
             control_panel:PanelState::new(&tx)?,
@@ -83,20 +87,55 @@ impl HomeManager{
         })
     }
 
-    pub fn train(&mut self, real_solar_data:&[f64; 24], real_weather_data:&WeatherData) -> Result<(), HomeManagerError>{
+    pub fn state_loop(&mut self, state:&mut State, new_state:&State) -> Result<(), HomeManagerError>{
+        if !self.iot_controller.test_endpoints(true)?{
+            self.control_panel.set_lan(false);
+            return Ok(())
+        }
+        self.control_panel.set_lan(true);
+        
+        match self.run_state_action(state, new_state) {
+            Ok(()) => (),
+            Err(HomeManagerError::IoTError(IoTError::Endpoint(_))) => self.control_panel.set_lan(false),
+            Err(e) => return Err(e) 
+        }
+        self.update_ev_charger()?;
+
+        *state = new_state.clone();
+
+        Ok(())
+    }
+
+    fn run_state_action(&mut self, state:&State, new_state:&State) -> Result<(), HomeManagerError>{
+        match (state.clone(), new_state.clone()) {
+            (State::Tariff, State::Standard) => {
+                self.tariff_end()?;
+            },
+            (State::Tariff, State::Tariff) => {
+                self.tariff_update()?;
+            },
+            (State::Standard, State::Tariff) => {
+                self.tariff_start()?;
+            },
+            (State::Standard, State::Standard) => ()
+        }
+        Ok(())
+    }
+
+    fn train(&mut self, real_solar_data:&[f64; 24], real_weather_data:&WeatherData) -> Result<(), HomeManagerError>{
         Ok(self.ml_engine.train(real_weather_data, real_solar_data)?)
     }
 
-    pub fn predict(&mut self, date:Date) -> Result<[f64; 24], HomeManagerError>{
+    fn predict(&mut self, date:Date) -> Result<[f64; 24], HomeManagerError>{
         let data = self.iot_controller.fetch_weather_data(date)?;
         Ok(self.ml_engine.infer(&data)?)
     }
 
-    pub fn tgl_pin(&mut self, pin:u8){
-        self.control_panel.toggle(pin);
+    pub fn handle_pin(&mut self, pin:u8){
+        self.control_panel.handle_pin(pin);
     }
 
-    pub fn tariff_start(&mut self) -> Result<(), HomeManagerError>{
+    fn tariff_start(&mut self) -> Result<(), HomeManagerError>{
         // get previous date
         let current_time = OffsetDateTime::now_local().map_err(|e| IoTError::from(e))?;
         let jic_offset = current_time - Duration::from_hours(6);
@@ -130,18 +169,15 @@ impl HomeManager{
 
         self.update_soc_target()?;
 
-        if !self.started {
-            self.started = true;
-        }
         Ok(())
     }
 
-    pub fn tariff_end(&mut self) -> Result<(), HomeManagerError>{
+    fn tariff_end(&mut self) -> Result<(), HomeManagerError>{
         self.iot_controller.set_min_soc(23)?;
         Ok(())
     }
 
-    pub fn tariff_update(&mut self) -> Result<(), HomeManagerError>{
+    fn tariff_update(&mut self) -> Result<(), HomeManagerError>{
         // get time
         let current_time = OffsetDateTime::now_local().map_err(|e| IoTError::from(e))?;
         let jic_offset = current_time + Duration::from_hours(6);

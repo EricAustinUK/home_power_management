@@ -47,6 +47,7 @@ pub struct IoTConfig {
 
 pub struct IoTController{
     ureq_agent:Agent,
+    iot_up:bool,
     iot_config: IoTConfig
 }
 
@@ -65,21 +66,34 @@ pub struct HassSample{
 impl IoTController{
     pub fn new(cfg:IoTConfig) -> Result<Self, IoTError> {
         let agent_cfg = Agent::config_builder()
-        .timeout_global(Some(Duration::from_secs(10)))
+        .timeout_global(Some(Duration::from_secs(1)))
         .build();
 
         let agent = agent_cfg.into();
+        let mut iot_controller  = Self { ureq_agent:agent, iot_up:false, iot_config:cfg };
 
-        
-        let iot_controller  = Self { ureq_agent:agent, iot_config:cfg };
-
-        // Check endpoints
-        let tomorrow = (time::OffsetDateTime::now_local()? + Duration::from_hours(24)).date();
-        iot_controller.fetch_soc_perc()?;
-        iot_controller.fetch_ev_info()?;
-        iot_controller.fetch_weather_data(tomorrow)?;
+        iot_controller.iot_up = iot_controller.test_endpoints(true)?;
 
         Ok(iot_controller)
+    }
+
+    pub fn test_endpoints(&self, use_cached:bool) -> Result<bool, IoTError>{
+        if self.iot_up && use_cached {
+            return Ok(true)
+        }
+        match self.blank_endpoint_fetch() {
+            Ok(()) => Ok(true),
+            Err(IoTError::Endpoint(_)) => Ok(false),
+            Err(e) => Err(e)
+        }
+    }
+
+    fn blank_endpoint_fetch(&self) -> Result<(), IoTError>{
+        let tomorrow = (time::OffsetDateTime::now_local()? + Duration::from_hours(24)).date();
+        self.fetch_soc_perc()?;
+        self.fetch_ev_info()?;
+        self.fetch_weather_data(tomorrow)?;
+        return Ok(())
     }
 
     pub fn fetch_ev_info(&self) -> Result<(u8, bool, bool), IoTError>{
