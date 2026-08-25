@@ -14,7 +14,7 @@ impl PanelState{
         let gpio = Gpio::new()?;
         let leds = Self::init_leds(&gpio)?;
         
-        let tgl_pins: Vec<InputPin> = [11, 12, 13]
+        let tgl_pins: Vec<InputPin> = [17, 18, 27]
             .into_iter()
             .map(|pin_no| {
                 let mut pin = gpio.get(pin_no)?.into_input_pullup();
@@ -54,9 +54,9 @@ impl PanelState{
     }
 
     pub fn init_leds(gpio:&Gpio) -> Result<[OutputPin; 3], rppal::gpio::Error> {
-        let led1 = gpio.get(16)?.into_output();
-        let led2 = gpio.get(18)?.into_output();
-        let led3 = gpio.get(22)?.into_output();
+        let led1 = gpio.get(23)?.into_output();
+        let led2 = gpio.get(24) ?.into_output();
+        let led3 = gpio.get(25)?.into_output();
 
         Ok([led1, led2, led3])
     }
