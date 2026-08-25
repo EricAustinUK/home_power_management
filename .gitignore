@@ -1,1 +1,2 @@
 .env
+buildroot-ext/rootfs_overlay/root/.ssh/authorized_hosts
