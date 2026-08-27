@@ -15,3 +15,7 @@ fp-info-cache
 *.gbr
 ./#auto_saved_files#
 _autosave*
+.claude
+*.json
+.venv
+*.py

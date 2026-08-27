@@ -1,251 +1,585 @@
-(kicad_sch (version 20230121) (generator eeschema)
-
-  (uuid 9538e4ed-27e6-4c37-b989-9859dc0d49e8)
-
-  (paper "A4")
-
-  (lib_symbols
-  )
-
-
-  (wire (pts (xy 143.51 107.95) (xy 156.21 107.95))
-    (stroke (width 0) (type default))
-    (uuid 06650d3b-6430-4de2-8649-5f705ea2ef51)
-  )
-  (wire (pts (xy 143.51 41.91) (xy 156.21 41.91))
-    (stroke (width 0) (type default))
-    (uuid 21a689be-a625-405f-adfc-cf7d4bac417f)
-  )
-  (wire (pts (xy 143.51 44.45) (xy 156.21 44.45))
-    (stroke (width 0) (type default))
-    (uuid 26e8a5c4-6fd1-4f38-8b78-6fdac3f9b511)
-  )
-  (wire (pts (xy 143.51 97.79) (xy 156.21 97.79))
-    (stroke (width 0) (type default))
-    (uuid 29a04f73-47d8-4d25-b97c-70b64f55740d)
-  )
-  (wire (pts (xy 143.51 74.93) (xy 156.21 74.93))
-    (stroke (width 0) (type default))
-    (uuid 29e1aa8e-c90e-4e60-bcd0-ee6b3ec1a876)
-  )
-  (wire (pts (xy 143.51 46.99) (xy 156.21 46.99))
-    (stroke (width 0) (type default))
-    (uuid 4e436c37-5d01-4d61-9450-57a1ad6c474c)
-  )
-  (wire (pts (xy 143.51 39.37) (xy 156.21 39.37))
-    (stroke (width 0) (type default))
-    (uuid 795c95e2-39b3-4dc1-8107-24b9135fc722)
-  )
-  (wire (pts (xy 143.51 105.41) (xy 156.21 105.41))
-    (stroke (width 0) (type default))
-    (uuid 7b034572-9ffc-4047-882b-02dcfa298c43)
-  )
-  (wire (pts (xy 143.51 72.39) (xy 156.21 72.39))
-    (stroke (width 0) (type default))
-    (uuid 9225ab15-6038-41c6-9bfb-bb5046724434)
-  )
-  (wire (pts (xy 143.51 67.31) (xy 156.21 67.31))
-    (stroke (width 0) (type default))
-    (uuid 9796bbfc-f55a-4cbe-973a-e44d9418e547)
-  )
-  (wire (pts (xy 143.51 100.33) (xy 156.21 100.33))
-    (stroke (width 0) (type default))
-    (uuid a1c8669e-1743-4511-83ea-46444d3652ae)
-  )
-  (wire (pts (xy 143.51 36.83) (xy 156.21 36.83))
-    (stroke (width 0) (type default))
-    (uuid a3d9b24a-a1f7-404f-86f6-fc2ec31474d2)
-  )
-  (wire (pts (xy 143.51 102.87) (xy 156.21 102.87))
-    (stroke (width 0) (type default))
-    (uuid dcebf739-582c-4b74-a6ba-48c1964b7f82)
-  )
-  (wire (pts (xy 143.51 69.85) (xy 156.21 69.85))
-    (stroke (width 0) (type default))
-    (uuid f0a4ef25-6bd8-46c9-8ed6-186d291d9ade)
-  )
-
-  (sheet (at 119.38 33.02) (size 24.13 85.09) (fields_autoplaced)
-    (stroke (width 0.1524) (type solid))
-    (fill (color 0 0 0 0.0000))
-    (uuid 2dd0a78a-9f0b-40ca-9e75-57533d65983b)
-    (property "Sheetname" "Pi_Zero_W_Module" (at 119.38 32.3084 0)
-      (effects (font (size 1.27 1.27)) (justify left bottom))
-    )
-    (property "Sheetfile" "pizerow.kicad_sch" (at 119.38 118.6946 0)
-      (effects (font (size 1.27 1.27)) (justify left top))
-    )
-    (pin "TGL_APP_1" input (at 143.51 36.83 0)
-      (effects (font (size 1.27 1.27)) (justify right))
-      (uuid 2438c671-215a-4aab-9eaf-8a01a0a6df8f)
-    )
-    (pin "TGL_APP_2" input (at 143.51 39.37 0)
-      (effects (font (size 1.27 1.27)) (justify right))
-      (uuid 53f8ff4b-4f56-45b1-aedb-f006ba3930e2)
-    )
-    (pin "DISPLAY_RES" output (at 143.51 102.87 0)
-      (effects (font (size 1.27 1.27)) (justify right))
-      (uuid d080400e-314c-4718-940c-ad5297d00af9)
-    )
-    (pin "EV_BAT_P" input (at 143.51 44.45 0)
-      (effects (font (size 1.27 1.27)) (justify right))
-      (uuid cd27aa0b-d565-4642-8b91-ac61cfd28249)
-    )
-    (pin "EV_BAT_N" input (at 143.51 46.99 0)
-      (effects (font (size 1.27 1.27)) (justify right))
-      (uuid b21cec5c-197c-4813-8ef0-6ff0b218579c)
-    )
-    (pin "APP_LED_2" output (at 143.51 72.39 0)
-      (effects (font (size 1.27 1.27)) (justify right))
-      (uuid 15aae929-7785-46c4-8b09-623d11163f86)
-    )
-    (pin "APP_LED_1" output (at 143.51 69.85 0)
-      (effects (font (size 1.27 1.27)) (justify right))
-      (uuid 03f6aab9-3e45-4ed1-b46b-6dda82dea005)
-    )
-    (pin "APP_LED_3" output (at 143.51 74.93 0)
-      (effects (font (size 1.27 1.27)) (justify right))
-      (uuid 7177e8d9-17d6-4c9d-a333-1a350f51c823)
-    )
-    (pin "DISPLAY_DC" output (at 143.51 105.41 0)
-      (effects (font (size 1.27 1.27)) (justify right))
-      (uuid 52b3132e-4304-461a-9e40-96dfa9bdc9fd)
-    )
-    (pin "TGL_APP_3" input (at 143.51 41.91 0)
-      (effects (font (size 1.27 1.27)) (justify right))
-      (uuid 22f606f8-3c5c-4897-b1c8-e6b0784456bc)
-    )
-    (pin "DISPLAY_CS" output (at 143.51 107.95 0)
-      (effects (font (size 1.27 1.27)) (justify right))
-      (uuid bcf35d46-51a9-4dcb-879a-367211697314)
-    )
-    (pin "DISPLAY_SDA" output (at 143.51 100.33 0)
-      (effects (font (size 1.27 1.27)) (justify right))
-      (uuid bc9d8248-5cca-4771-8cdd-33581fbe4c10)
-    )
-    (pin "DISPLAY_SCL" output (at 143.51 97.79 0)
-      (effects (font (size 1.27 1.27)) (justify right))
-      (uuid 02ad3037-35e3-403f-8a7e-14119968c525)
-    )
-    (pin "LAN_LED" output (at 143.51 67.31 0)
-      (effects (font (size 1.27 1.27)) (justify right))
-      (uuid efb0d7b2-a3d2-46cb-9285-c8f92fd278aa)
-    )
-    (instances
-      (project "project"
-        (path "/9538e4ed-27e6-4c37-b989-9859dc0d49e8" (page "3"))
-      )
-    )
-  )
-
-  (sheet (at 156.21 33.02) (size 27.94 22.86) (fields_autoplaced)
-    (stroke (width 0.1524) (type solid))
-    (fill (color 0 0 0 0.0000))
-    (uuid 619eee36-7c04-46f2-a8c0-8355d58d5928)
-    (property "Sheetname" "Control_Panel" (at 156.21 32.3084 0)
-      (effects (font (size 1.27 1.27)) (justify left bottom))
-    )
-    (property "Sheetfile" "control_panel.kicad_sch" (at 156.21 56.4646 0)
-      (effects (font (size 1.27 1.27)) (justify left top))
-    )
-    (pin "TGL_APP_2" output (at 156.21 39.37 180)
-      (effects (font (size 1.27 1.27)) (justify left))
-      (uuid 1d25e161-5418-4603-96a1-c428779851af)
-    )
-    (pin "TGL_APP_1" output (at 156.21 36.83 180)
-      (effects (font (size 1.27 1.27)) (justify left))
-      (uuid 5f10211c-3064-43a1-9c6f-91d96c5d0a58)
-    )
-    (pin "TGL_APP_3" output (at 156.21 41.91 180)
-      (effects (font (size 1.27 1.27)) (justify left))
-      (uuid 65edc276-4c8d-490a-9828-33965a9398df)
-    )
-    (pin "EV_BAT_N" output (at 156.21 46.99 180)
-      (effects (font (size 1.27 1.27)) (justify left))
-      (uuid a3fec7c5-6a57-4c9d-8eb1-834d4cebdfaf)
-    )
-    (pin "EV_BAT_P" output (at 156.21 44.45 180)
-      (effects (font (size 1.27 1.27)) (justify left))
-      (uuid 40f67bef-c3bb-41b5-8e85-b8137d8b4821)
-    )
-    (instances
-      (project "project"
-        (path "/9538e4ed-27e6-4c37-b989-9859dc0d49e8" (page "2"))
-      )
-    )
-  )
-
-  (sheet (at 156.21 64.77) (size 27.94 22.86) (fields_autoplaced)
-    (stroke (width 0.1524) (type solid))
-    (fill (color 0 0 0 0.0000))
-    (uuid b5459d7a-1bde-4bce-998a-859d3b17613f)
-    (property "Sheetname" "LED_Panel" (at 156.21 64.0584 0)
-      (effects (font (size 1.27 1.27)) (justify left bottom))
-    )
-    (property "Sheetfile" "led_panel.kicad_sch" (at 156.21 88.2146 0)
-      (effects (font (size 1.27 1.27)) (justify left top))
-    )
-    (pin "LAN_LED" input (at 156.21 67.31 180)
-      (effects (font (size 1.27 1.27)) (justify left))
-      (uuid 45f2ae20-d8b2-489b-992f-a9349bb7d10e)
-    )
-    (pin "APP_LED_1" input (at 156.21 69.85 180)
-      (effects (font (size 1.27 1.27)) (justify left))
-      (uuid b598c325-9889-4f74-9d34-048b3575e647)
-    )
-    (pin "APP_LED_2" input (at 156.21 72.39 180)
-      (effects (font (size 1.27 1.27)) (justify left))
-      (uuid 15476965-1d67-40a6-be81-ab664cbf041f)
-    )
-    (pin "APP_LED_3" input (at 156.21 74.93 180)
-      (effects (font (size 1.27 1.27)) (justify left))
-      (uuid 0388c46c-8d27-44cd-8433-f92b7f74672b)
-    )
-    (instances
-      (project "project"
-        (path "/9538e4ed-27e6-4c37-b989-9859dc0d49e8" (page "4"))
-      )
-    )
-  )
-
-  (sheet (at 156.21 95.25) (size 27.94 22.86) (fields_autoplaced)
-    (stroke (width 0.1524) (type solid))
-    (fill (color 0 0 0 0.0000))
-    (uuid ed4e5929-6250-43cf-8fc1-950a2596bf04)
-    (property "Sheetname" "LCD_Display" (at 156.21 94.5384 0)
-      (effects (font (size 1.27 1.27)) (justify left bottom))
-    )
-    (property "Sheetfile" "lcd.kicad_sch" (at 156.21 118.6946 0)
-      (effects (font (size 1.27 1.27)) (justify left top))
-    )
-    (pin "LCD_DC" input (at 156.21 105.41 180)
-      (effects (font (size 1.27 1.27)) (justify left))
-      (uuid 1526a957-34e3-401a-a130-2992c9f2eec4)
-    )
-    (pin "LCD_SDA" input (at 156.21 100.33 180)
-      (effects (font (size 1.27 1.27)) (justify left))
-      (uuid bc83734b-ab02-4984-ac1c-dd24a5f62944)
-    )
-    (pin "LCD_RES" input (at 156.21 102.87 180)
-      (effects (font (size 1.27 1.27)) (justify left))
-      (uuid de404634-8655-40ff-ad2d-d6bef6a08b9e)
-    )
-    (pin "LCD_CS" input (at 156.21 107.95 180)
-      (effects (font (size 1.27 1.27)) (justify left))
-      (uuid b2564d68-f597-4692-a2a1-2f13b4f40e2d)
-    )
-    (pin "LCD_SCL" input (at 156.21 97.79 180)
-      (effects (font (size 1.27 1.27)) (justify left))
-      (uuid 93bd6460-fb74-4c9e-a12b-15a0d5ffb3bc)
-    )
-    (instances
-      (project "project"
-        (path "/9538e4ed-27e6-4c37-b989-9859dc0d49e8" (page "5"))
-      )
-    )
-  )
-
-  (sheet_instances
-    (path "/" (page "1"))
-  )
+(kicad_sch
+	(version 20231120)
+	(generator "eeschema")
+	(generator_version "8.0")
+	(uuid "9538e4ed-27e6-4c37-b989-9859dc0d49e8")
+	(paper "A4")
+	(lib_symbols)
+	(wire
+		(pts
+			(xy 143.51 107.95) (xy 156.21 107.95)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "06650d3b-6430-4de2-8649-5f705ea2ef51")
+	)
+	(wire
+		(pts
+			(xy 143.51 41.91) (xy 156.21 41.91)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "21a689be-a625-405f-adfc-cf7d4bac417f")
+	)
+	(wire
+		(pts
+			(xy 143.51 44.45) (xy 156.21 44.45)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "26e8a5c4-6fd1-4f38-8b78-6fdac3f9b511")
+	)
+	(wire
+		(pts
+			(xy 143.51 97.79) (xy 156.21 97.79)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "29a04f73-47d8-4d25-b97c-70b64f55740d")
+	)
+	(wire
+		(pts
+			(xy 143.51 74.93) (xy 156.21 74.93)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "29e1aa8e-c90e-4e60-bcd0-ee6b3ec1a876")
+	)
+	(wire
+		(pts
+			(xy 143.51 46.99) (xy 156.21 46.99)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "4e436c37-5d01-4d61-9450-57a1ad6c474c")
+	)
+	(wire
+		(pts
+			(xy 143.51 39.37) (xy 156.21 39.37)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "795c95e2-39b3-4dc1-8107-24b9135fc722")
+	)
+	(wire
+		(pts
+			(xy 143.51 105.41) (xy 156.21 105.41)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "7b034572-9ffc-4047-882b-02dcfa298c43")
+	)
+	(wire
+		(pts
+			(xy 143.51 72.39) (xy 156.21 72.39)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "9225ab15-6038-41c6-9bfb-bb5046724434")
+	)
+	(wire
+		(pts
+			(xy 143.51 67.31) (xy 156.21 67.31)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "9796bbfc-f55a-4cbe-973a-e44d9418e547")
+	)
+	(wire
+		(pts
+			(xy 143.51 100.33) (xy 156.21 100.33)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "a1c8669e-1743-4511-83ea-46444d3652ae")
+	)
+	(wire
+		(pts
+			(xy 143.51 36.83) (xy 156.21 36.83)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "a3d9b24a-a1f7-404f-86f6-fc2ec31474d2")
+	)
+	(wire
+		(pts
+			(xy 143.51 102.87) (xy 156.21 102.87)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "dcebf739-582c-4b74-a6ba-48c1964b7f82")
+	)
+	(wire
+		(pts
+			(xy 143.51 69.85) (xy 156.21 69.85)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "f0a4ef25-6bd8-46c9-8ed6-186d291d9ade")
+	)
+	(sheet
+		(at 119.38 33.02)
+		(size 24.13 85.09)
+		(fields_autoplaced yes)
+		(stroke
+			(width 0.1524)
+			(type solid)
+		)
+		(fill
+			(color 0 0 0 0.0000)
+		)
+		(uuid "2dd0a78a-9f0b-40ca-9e75-57533d65983b")
+		(property "Sheetname" "Pi_Zero_W_Module"
+			(at 119.38 32.3084 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left bottom)
+			)
+		)
+		(property "Sheetfile" "pizerow.kicad_sch"
+			(at 119.38 118.6946 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left top)
+			)
+		)
+		(pin "TGL_APP_1" input
+			(at 143.51 36.83 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify right)
+			)
+			(uuid "2438c671-215a-4aab-9eaf-8a01a0a6df8f")
+		)
+		(pin "TGL_APP_2" input
+			(at 143.51 39.37 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify right)
+			)
+			(uuid "53f8ff4b-4f56-45b1-aedb-f006ba3930e2")
+		)
+		(pin "DISPLAY_RES" output
+			(at 143.51 102.87 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify right)
+			)
+			(uuid "d080400e-314c-4718-940c-ad5297d00af9")
+		)
+		(pin "EV_BAT_P" input
+			(at 143.51 44.45 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify right)
+			)
+			(uuid "cd27aa0b-d565-4642-8b91-ac61cfd28249")
+		)
+		(pin "EV_BAT_N" input
+			(at 143.51 46.99 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify right)
+			)
+			(uuid "b21cec5c-197c-4813-8ef0-6ff0b218579c")
+		)
+		(pin "APP_LED_2" output
+			(at 143.51 72.39 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify right)
+			)
+			(uuid "15aae929-7785-46c4-8b09-623d11163f86")
+		)
+		(pin "APP_LED_1" output
+			(at 143.51 69.85 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify right)
+			)
+			(uuid "03f6aab9-3e45-4ed1-b46b-6dda82dea005")
+		)
+		(pin "APP_LED_3" output
+			(at 143.51 74.93 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify right)
+			)
+			(uuid "7177e8d9-17d6-4c9d-a333-1a350f51c823")
+		)
+		(pin "DISPLAY_DC" output
+			(at 143.51 105.41 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify right)
+			)
+			(uuid "52b3132e-4304-461a-9e40-96dfa9bdc9fd")
+		)
+		(pin "TGL_APP_3" input
+			(at 143.51 41.91 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify right)
+			)
+			(uuid "22f606f8-3c5c-4897-b1c8-e6b0784456bc")
+		)
+		(pin "DISPLAY_CS" output
+			(at 143.51 107.95 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify right)
+			)
+			(uuid "bcf35d46-51a9-4dcb-879a-367211697314")
+		)
+		(pin "DISPLAY_SDA" output
+			(at 143.51 100.33 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify right)
+			)
+			(uuid "bc9d8248-5cca-4771-8cdd-33581fbe4c10")
+		)
+		(pin "DISPLAY_SCL" output
+			(at 143.51 97.79 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify right)
+			)
+			(uuid "02ad3037-35e3-403f-8a7e-14119968c525")
+		)
+		(pin "LAN_LED" output
+			(at 143.51 67.31 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify right)
+			)
+			(uuid "efb0d7b2-a3d2-46cb-9285-c8f92fd278aa")
+		)
+		(instances
+			(project "project"
+				(path "/9538e4ed-27e6-4c37-b989-9859dc0d49e8"
+					(page "3")
+				)
+			)
+		)
+	)
+	(sheet
+		(at 156.21 33.02)
+		(size 27.94 22.86)
+		(fields_autoplaced yes)
+		(stroke
+			(width 0.1524)
+			(type solid)
+		)
+		(fill
+			(color 0 0 0 0.0000)
+		)
+		(uuid "619eee36-7c04-46f2-a8c0-8355d58d5928")
+		(property "Sheetname" "Control_Panel"
+			(at 156.21 32.3084 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left bottom)
+			)
+		)
+		(property "Sheetfile" "control_panel.kicad_sch"
+			(at 156.21 56.4646 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left top)
+			)
+		)
+		(pin "TGL_APP_2" output
+			(at 156.21 39.37 180)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+			(uuid "1d25e161-5418-4603-96a1-c428779851af")
+		)
+		(pin "TGL_APP_1" output
+			(at 156.21 36.83 180)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+			(uuid "5f10211c-3064-43a1-9c6f-91d96c5d0a58")
+		)
+		(pin "TGL_APP_3" output
+			(at 156.21 41.91 180)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+			(uuid "65edc276-4c8d-490a-9828-33965a9398df")
+		)
+		(pin "EV_BAT_N" output
+			(at 156.21 46.99 180)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+			(uuid "a3fec7c5-6a57-4c9d-8eb1-834d4cebdfaf")
+		)
+		(pin "EV_BAT_P" output
+			(at 156.21 44.45 180)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+			(uuid "40f67bef-c3bb-41b5-8e85-b8137d8b4821")
+		)
+		(instances
+			(project "project"
+				(path "/9538e4ed-27e6-4c37-b989-9859dc0d49e8"
+					(page "2")
+				)
+			)
+		)
+	)
+	(sheet
+		(at 156.21 64.77)
+		(size 27.94 22.86)
+		(fields_autoplaced yes)
+		(stroke
+			(width 0.1524)
+			(type solid)
+		)
+		(fill
+			(color 0 0 0 0.0000)
+		)
+		(uuid "b5459d7a-1bde-4bce-998a-859d3b17613f")
+		(property "Sheetname" "LED_Panel"
+			(at 156.21 64.0584 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left bottom)
+			)
+		)
+		(property "Sheetfile" "led_panel.kicad_sch"
+			(at 156.21 88.2146 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left top)
+			)
+		)
+		(pin "LAN_LED" input
+			(at 156.21 67.31 180)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+			(uuid "45f2ae20-d8b2-489b-992f-a9349bb7d10e")
+		)
+		(pin "APP_LED_1" input
+			(at 156.21 69.85 180)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+			(uuid "b598c325-9889-4f74-9d34-048b3575e647")
+		)
+		(pin "APP_LED_2" input
+			(at 156.21 72.39 180)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+			(uuid "15476965-1d67-40a6-be81-ab664cbf041f")
+		)
+		(pin "APP_LED_3" input
+			(at 156.21 74.93 180)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+			(uuid "0388c46c-8d27-44cd-8433-f92b7f74672b")
+		)
+		(instances
+			(project "project"
+				(path "/9538e4ed-27e6-4c37-b989-9859dc0d49e8"
+					(page "4")
+				)
+			)
+		)
+	)
+	(sheet
+		(at 156.21 95.25)
+		(size 27.94 22.86)
+		(fields_autoplaced yes)
+		(stroke
+			(width 0.1524)
+			(type solid)
+		)
+		(fill
+			(color 0 0 0 0.0000)
+		)
+		(uuid "ed4e5929-6250-43cf-8fc1-950a2596bf04")
+		(property "Sheetname" "LCD_Display"
+			(at 156.21 94.5384 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left bottom)
+			)
+		)
+		(property "Sheetfile" "lcd.kicad_sch"
+			(at 156.21 118.6946 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left top)
+			)
+		)
+		(pin "LCD_DC" input
+			(at 156.21 105.41 180)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+			(uuid "1526a957-34e3-401a-a130-2992c9f2eec4")
+		)
+		(pin "LCD_SDA" input
+			(at 156.21 100.33 180)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+			(uuid "bc83734b-ab02-4984-ac1c-dd24a5f62944")
+		)
+		(pin "LCD_RES" input
+			(at 156.21 102.87 180)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+			(uuid "de404634-8655-40ff-ad2d-d6bef6a08b9e")
+		)
+		(pin "LCD_CS" input
+			(at 156.21 107.95 180)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+			(uuid "b2564d68-f597-4692-a2a1-2f13b4f40e2d")
+		)
+		(pin "LCD_SCL" input
+			(at 156.21 97.79 180)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+			(uuid "93bd6460-fb74-4c9e-a12b-15a0d5ffb3bc")
+		)
+		(instances
+			(project "project"
+				(path "/9538e4ed-27e6-4c37-b989-9859dc0d49e8"
+					(page "5")
+				)
+			)
+		)
+	)
+	(sheet_instances
+		(path "/"
+			(page "1")
+		)
+	)
 )
