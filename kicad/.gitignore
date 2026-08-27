@@ -13,3 +13,5 @@ fp-info-cache
 *.pdf
 *.drl
 *.gbr
+./#auto_saved_files#
+_autosave*

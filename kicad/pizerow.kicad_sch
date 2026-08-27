@@ -415,7 +415,7 @@
   (symbol (lib_id "RBPiZero:PiZeroW_Bottom_Mount") (at 119.38 91.44 0) (unit 1)
     (in_bom yes) (on_board yes) (dnp no) (fields_autoplaced)
     (uuid 98f4fbc2-a93c-4309-880e-5be692c793cc)
-    (property "Reference" "J?" (at 126.4794 55.88 0)
+    (property "Reference" "J2" (at 126.4794 55.88 0)
       (effects (font (size 1.27 1.27)) (justify left))
     )
     (property "Value" "PiZeroW_Bottom_Mount" (at 126.4794 58.42 0)
@@ -472,7 +472,7 @@
     (instances
       (project "project"
         (path "/9538e4ed-27e6-4c37-b989-9859dc0d49e8/2dd0a78a-9f0b-40ca-9e75-57533d65983b"
-          (reference "J?") (unit 1)
+          (reference "J2") (unit 1)
         )
       )
     )
@@ -481,7 +481,7 @@
   (symbol (lib_id "power:GND") (at 109.22 128.27 0) (unit 1)
     (in_bom yes) (on_board yes) (dnp no) (fields_autoplaced)
     (uuid df28e018-29b9-4a48-b858-623f50d01983)
-    (property "Reference" "#PWR?" (at 109.22 134.62 0)
+    (property "Reference" "#PWR0104" (at 109.22 134.62 0)
       (effects (font (size 1.27 1.27)) hide)
     )
     (property "Value" "GND" (at 109.22 133.35 0)
@@ -497,7 +497,7 @@
     (instances
       (project "project"
         (path "/9538e4ed-27e6-4c37-b989-9859dc0d49e8/2dd0a78a-9f0b-40ca-9e75-57533d65983b"
-          (reference "#PWR?") (unit 1)
+          (reference "#PWR0104") (unit 1)
         )
       )
     )
@@ -506,7 +506,7 @@
   (symbol (lib_id "power:+3V3") (at 121.92 53.34 0) (unit 1)
     (in_bom yes) (on_board yes) (dnp no) (fields_autoplaced)
     (uuid df7dc256-7a44-42ff-898c-03a6a6a68c11)
-    (property "Reference" "#PWR?" (at 121.92 57.15 0)
+    (property "Reference" "#PWR0103" (at 121.92 57.15 0)
       (effects (font (size 1.27 1.27)) hide)
     )
     (property "Value" "+3V3" (at 121.92 48.26 0)
@@ -522,7 +522,7 @@
     (instances
       (project "project"
         (path "/9538e4ed-27e6-4c37-b989-9859dc0d49e8/2dd0a78a-9f0b-40ca-9e75-57533d65983b"
-          (reference "#PWR?") (unit 1)
+          (reference "#PWR0103") (unit 1)
         )
       )
     )
