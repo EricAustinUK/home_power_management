@@ -2,6 +2,16 @@ export component App inherits Window {
     background: #1e1e1eff;
     width: 128px;
     height: 160px;
+
+    in property <string> date_str: "26/08/26";
+    in property <string> time_str: "09:00";
+    in property <int> solar_est_wh: 0;
+    in property <int> usage_est_wh: 0;
+    in property <float> home_soc_percent: 67.0;
+    in property <float> ev_soc_percent: 67.0;
+    in property <int> home_soc_min: 0;
+    in property <int> home_soc_max: 100;
+    
     id_1-4512 := Rectangle { /* LCD */
         width: 128px;
         height: 160px;
@@ -33,7 +43,7 @@ export component App inherits Window {
                         height: 20px;
                         x: 0px;
                         y: 0px;
-                        text: "26/08/26";
+                        text: root.date_str;
                         font-family: "DejaVu Sans";
                         font-size: 12px;
                         font-weight: 400;
@@ -54,7 +64,7 @@ export component App inherits Window {
                         height: 20px;
                         x: 0px;
                         y: 0px;
-                        text: "09:00";
+                        text: root.time_str;
                         font-family: "DejaVu Sans";
                         font-size: 12px;
                         font-weight: 400;
@@ -125,7 +135,7 @@ export component App inherits Window {
                     height: 18px;
                     x: 0px;
                     y: 18px;
-                    text: "0Wh";
+                    text: "\{root.solar_est_wh}Wh";
                     font-family: "DejaVu Sans";
                     font-size: 12px;
                     font-weight: 400;
@@ -160,7 +170,7 @@ export component App inherits Window {
                     height: 18px;
                     x: 0px;
                     y: 18px;
-                    text: "0Wh";
+                    text: "\{root.usage_est_wh}Wh";
                     font-family: "DejaVu Sans";
                     font-size: 12px;
                     font-weight: 400;
@@ -210,7 +220,7 @@ export component App inherits Window {
                     height: 18px;
                     x: 0px;
                     y: 0px;
-                    text: "Min%";
+                    text: "\{root.home_soc_min}%";
                     font-family: "DejaVu Sans";
                     font-size: 12px;
                     font-weight: 400;
@@ -224,7 +234,7 @@ export component App inherits Window {
                     height: 18px;
                     x: 96px;
                     y: 0px;
-                    text: "Max%";
+                    text: "\{root.home_soc_max}%";
                     font-family: "DejaVu Sans";
                     font-size: 12px;
                     font-weight: 400;
@@ -246,22 +256,22 @@ export component App inherits Window {
                         y: 0px;
                         clip: true;
                         id_9-88 := Rectangle { /* Charge */
-                            width: 80px;
+                            width: (Math.max(root.home_soc_percent, 22.0) / 100.0) * parent.width;
                             height: 18px;
                             x: 0px;
                             y: 0px;
                             background: #135e18ff;
                             clip: true;
                             id_9-89 := Text { /* MinLabel */
-                                width: 28px;
+                                width: parent.width - 4px;
                                 height: 18px;
-                                x: 52px;
+                                x: 0px;
                                 y: 0px;
-                                text: "67%";
+                                text: "\{Math.round(root.home_soc_percent)}%";
                                 font-family: "DejaVu Sans";
                                 font-size: 12px;
                                 font-weight: 400;
-                                horizontal-alignment: center;
+                                horizontal-alignment: right;
                                 vertical-alignment: center;
                                 letter-spacing: 0px;
                                 color: #fae4e4ff;
@@ -306,22 +316,22 @@ export component App inherits Window {
                 y: 30px;
                 clip: true;
                 id_I9-115_9-88 := Rectangle { /* Charge */
-                    width: 80px;
+                    width: (Math.max(root.ev_soc_percent, 22.0) / 100.0) * parent.width;
                     height: 18px;
                     x: 0px;
                     y: 0px;
                     background: #135e18ff;
                     clip: true;
                     id_I9-115_9-89 := Text { /* MinLabel */
-                        width: 28px;
+                        width: parent.width - 4px;
                         height: 18px;
-                        x: 52px;
+                        x: 0px;
                         y: 0px;
-                        text: "67%";
+                        text: "\{Math.round(root.ev_soc_percent)}%";
                         font-family: "DejaVu Sans";
                         font-size: 12px;
                         font-weight: 400;
-                        horizontal-alignment: center;
+                        horizontal-alignment: right;
                         vertical-alignment: center;
                         letter-spacing: 0px;
                         color: #fae4e4ff;
