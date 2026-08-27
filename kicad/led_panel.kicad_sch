@@ -731,7 +731,7 @@
 		(fields_autoplaced yes)
 		(uuid "3ee30f52-74ca-41ec-bada-909e48d2ecf2")
 		(property "Reference" "APP_3"
-			(at 105.41 54.9275 90)
+			(at 105.41 54.9274 90)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -740,7 +740,7 @@
 			)
 		)
 		(property "Value" "LED"
-			(at 105.41 57.4675 90)
+			(at 105.41 57.4674 90)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -766,7 +766,7 @@
 				(hide yes)
 			)
 		)
-		(property "Description" ""
+		(property "Description" "Light emitting diode"
 			(at 101.6 54.61 0)
 			(effects
 				(font
@@ -801,7 +801,7 @@
 		(fields_autoplaced yes)
 		(uuid "4754a994-b942-4118-b91c-9e91289c1d23")
 		(property "Reference" "LAN1"
-			(at 67.31 54.9275 90)
+			(at 67.31 54.9274 90)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -810,7 +810,7 @@
 			)
 		)
 		(property "Value" "LED"
-			(at 67.31 57.4675 90)
+			(at 67.31 57.4674 90)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -836,7 +836,7 @@
 				(hide yes)
 			)
 		)
-		(property "Description" ""
+		(property "Description" "Light emitting diode"
 			(at 63.5 54.61 0)
 			(effects
 				(font
@@ -871,7 +871,7 @@
 		(fields_autoplaced yes)
 		(uuid "4a99c906-be2c-4fa4-a7f6-28b1707e45e8")
 		(property "Reference" "R6"
-			(at 53.34 45.72 0)
+			(at 53.34 45.7199 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -880,7 +880,7 @@
 			)
 		)
 		(property "Value" "220"
-			(at 53.34 48.26 0)
+			(at 53.34 48.2599 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -906,7 +906,7 @@
 				(hide yes)
 			)
 		)
-		(property "Description" ""
+		(property "Description" "Resistor"
 			(at 50.8 46.99 0)
 			(effects
 				(font
@@ -941,7 +941,7 @@
 		(fields_autoplaced yes)
 		(uuid "4ac2a730-3ddd-47c0-b4c7-c1036b236e35")
 		(property "Reference" "APP_1"
-			(at 80.01 54.9275 90)
+			(at 80.01 54.9274 90)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -950,7 +950,7 @@
 			)
 		)
 		(property "Value" "LED"
-			(at 80.01 57.4675 90)
+			(at 80.01 57.4674 90)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -976,7 +976,7 @@
 				(hide yes)
 			)
 		)
-		(property "Description" ""
+		(property "Description" "Light emitting diode"
 			(at 76.2 54.61 0)
 			(effects
 				(font
@@ -1011,7 +1011,7 @@
 		(fields_autoplaced yes)
 		(uuid "575d4a6d-167f-4630-8f65-e362f79164f9")
 		(property "Reference" "APP_2"
-			(at 92.71 54.9275 90)
+			(at 92.71 54.9274 90)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -1020,7 +1020,7 @@
 			)
 		)
 		(property "Value" "LED"
-			(at 92.71 57.4675 90)
+			(at 92.71 57.4674 90)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -1046,7 +1046,7 @@
 				(hide yes)
 			)
 		)
-		(property "Description" ""
+		(property "Description" "Light emitting diode"
 			(at 88.9 54.61 0)
 			(effects
 				(font
@@ -1081,7 +1081,7 @@
 		(fields_autoplaced yes)
 		(uuid "7900fc6c-b0d3-4cdf-855b-417ec9a44b63")
 		(property "Reference" "R8"
-			(at 78.74 45.72 0)
+			(at 78.74 45.7199 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -1090,7 +1090,7 @@
 			)
 		)
 		(property "Value" "220"
-			(at 78.74 48.26 0)
+			(at 78.74 48.2599 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -1116,7 +1116,7 @@
 				(hide yes)
 			)
 		)
-		(property "Description" ""
+		(property "Description" "Resistor"
 			(at 76.2 46.99 0)
 			(effects
 				(font
@@ -1151,7 +1151,7 @@
 		(fields_autoplaced yes)
 		(uuid "9d05ba3c-6e36-4aee-9175-a64cfdaaf34f")
 		(property "Reference" "PWR1"
-			(at 54.61 54.9275 90)
+			(at 54.61 54.9274 90)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -1160,7 +1160,7 @@
 			)
 		)
 		(property "Value" "LED"
-			(at 54.61 57.4675 90)
+			(at 54.61 57.4674 90)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -1186,7 +1186,7 @@
 				(hide yes)
 			)
 		)
-		(property "Description" ""
+		(property "Description" "Light emitting diode"
 			(at 50.8 54.61 0)
 			(effects
 				(font
@@ -1221,7 +1221,7 @@
 		(fields_autoplaced yes)
 		(uuid "9fbd0af0-9d9d-43a6-afd8-5e856fdd1aeb")
 		(property "Reference" "R7"
-			(at 66.04 45.72 0)
+			(at 66.04 45.7199 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -1230,7 +1230,7 @@
 			)
 		)
 		(property "Value" "220"
-			(at 66.04 48.26 0)
+			(at 66.04 48.2599 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -1256,7 +1256,7 @@
 				(hide yes)
 			)
 		)
-		(property "Description" ""
+		(property "Description" "Resistor"
 			(at 63.5 46.99 0)
 			(effects
 				(font
@@ -1291,7 +1291,7 @@
 		(fields_autoplaced yes)
 		(uuid "a22fe6c2-7871-45bd-a60a-b699c1c9aa65")
 		(property "Reference" "R9"
-			(at 91.44 45.72 0)
+			(at 91.44 45.7199 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -1300,7 +1300,7 @@
 			)
 		)
 		(property "Value" "220"
-			(at 91.44 48.26 0)
+			(at 91.44 48.2599 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -1326,7 +1326,7 @@
 				(hide yes)
 			)
 		)
-		(property "Description" ""
+		(property "Description" "Resistor"
 			(at 88.9 46.99 0)
 			(effects
 				(font
@@ -1361,7 +1361,7 @@
 		(fields_autoplaced yes)
 		(uuid "c78b7c9d-0308-4310-8fa0-13cade288b8e")
 		(property "Reference" "R10"
-			(at 104.14 45.72 0)
+			(at 104.14 45.7199 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -1370,7 +1370,7 @@
 			)
 		)
 		(property "Value" "220"
-			(at 104.14 48.26 0)
+			(at 104.14 48.2599 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -1396,7 +1396,7 @@
 				(hide yes)
 			)
 		)
-		(property "Description" ""
+		(property "Description" "Resistor"
 			(at 101.6 46.99 0)
 			(effects
 				(font
@@ -1440,11 +1440,12 @@
 			)
 		)
 		(property "Value" "+3V3"
-			(at 50.8 33.02 0)
+			(at 53.34 36.8299 0)
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
+				(justify left)
 			)
 		)
 		(property "Footprint" ""
@@ -1465,7 +1466,7 @@
 				(hide yes)
 			)
 		)
-		(property "Description" ""
+		(property "Description" "Power symbol creates a global label with name \"+3V3\""
 			(at 50.8 38.1 0)
 			(effects
 				(font
@@ -1506,11 +1507,12 @@
 			)
 		)
 		(property "Value" "GND"
-			(at 101.6 68.58 0)
+			(at 104.14 64.7699 0)
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
+				(justify left)
 			)
 		)
 		(property "Footprint" ""
@@ -1531,7 +1533,7 @@
 				(hide yes)
 			)
 		)
-		(property "Description" ""
+		(property "Description" "Power symbol creates a global label with name \"GND\" , ground"
 			(at 101.6 63.5 0)
 			(effects
 				(font

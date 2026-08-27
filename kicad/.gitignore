@@ -10,6 +10,9 @@ fp-info-cache
 /project-backups/
 /plots/
 /gerber/
+/gerbers/
+/bom.csv
+/project_fab.zip
 *.pdf
 *.drl
 *.gbr

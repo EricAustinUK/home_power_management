@@ -786,7 +786,7 @@
 		(exclude_from_sim no)
 		(in_bom yes)
 		(on_board yes)
-		(dnp no)
+		(dnp yes)
 		(fields_autoplaced yes)
 		(uuid "4bac46b6-af44-4997-aa92-0bae6e460dbc")
 		(property "Reference" "J1"
@@ -823,7 +823,7 @@
 				(hide yes)
 			)
 		)
-		(property "Description" ""
+		(property "Description" "Generic connector, single row, 01x08, script generated"
 			(at 124.46 86.36 0)
 			(effects
 				(font
@@ -885,7 +885,7 @@
 			)
 		)
 		(property "Value" "GND"
-			(at 133.35 78.74 90)
+			(at 133.35 78.7399 90)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -911,7 +911,7 @@
 				(hide yes)
 			)
 		)
-		(property "Description" ""
+		(property "Description" "Power symbol creates a global label with name \"GND\" , ground"
 			(at 129.54 78.74 0)
 			(effects
 				(font
@@ -952,11 +952,12 @@
 			)
 		)
 		(property "Value" "+3V3"
-			(at 143.51 73.66 0)
+			(at 146.05 77.4699 0)
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
+				(justify left)
 			)
 		)
 		(property "Footprint" ""
@@ -977,7 +978,7 @@
 				(hide yes)
 			)
 		)
-		(property "Description" ""
+		(property "Description" "Power symbol creates a global label with name \"+3V3\""
 			(at 143.51 78.74 0)
 			(effects
 				(font
