@@ -12,6 +12,12 @@
                 "arm-unknown-linux-musleabihf",
                 "--release"
             ],
+            "env": {
+                "PKG_CONFIG_SYSROOT_DIR": "${workspaceFolder}/buildroot/output/staging",
+                "PKG_CONFIG_PATH": "${workspaceFolder}/buildroot/output/staging/usr/lib/pkgconfig",
+                "PKG_CONFIG_LIBDIR": "${workspaceFolder}/buildroot/output/staging/usr/lib/pkgconfig",
+                "PKG_CONFIG_ALLOW_CROSS": "1"
+            },
             "options": {
                 "cwd": "${workspaceFolder}/software"
             },

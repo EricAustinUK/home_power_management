@@ -14,7 +14,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>>{
     let mut home_manager = match  HomeManager::new() {
         Ok(hm) => hm,
         Err(hm_e) => match hm_e {
-            HomeManagerError::IoTError(iot_hm_e) => match iot_hm_e{
+            HomeManagerError::IoT(iot_hm_e) => match iot_hm_e{
                 IoTError::Endpoint(iot_e) => {
                         let mut tries:u8 = 1;
                         println!("Error fetching initial data from endpoints due to: {:?} \nRetrying in {ATTEMPT_DELAY_S} second(s)...", iot_e);
@@ -27,7 +27,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>>{
                             };
 
                             match err{
-                                HomeManagerError::IoTError(iot_e) => match iot_e{
+                                HomeManagerError::IoT(iot_e) => match iot_e{
                                     IoTError::Endpoint(re_e) => {
                                         println!("Attempt {tries}/{INIT_ATTEMPTS} failed to fetch initial data from endpoints due to:{:?}", re_e);
                                     },

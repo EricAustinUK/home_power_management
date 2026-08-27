@@ -1,5 +1,19 @@
 use std::{sync::mpsc::Sender, time::Duration};
 use rppal::gpio::{Gpio, InputPin, Level, OutputPin, Trigger};
+use thiserror::Error;
+
+mod display;
+use display::{Display, DisplayError};
+
+#[derive(Error, Debug)]
+pub enum PanelError {
+    #[error("Error with GPIO pins: {0}")]
+    GPIO(#[from] rppal::gpio::Error),
+    
+    #[error("Error connecting slint to display: {0}")]
+    Display(#[from] DisplayError),
+}
+
 
 pub struct PanelState {
     pub app_1: bool,
@@ -8,11 +22,12 @@ pub struct PanelState {
     lan: bool, 
     leds: [OutputPin; 4],
     pub ev_target_perc:u8,
-    _tgl_pins: Vec<InputPin>
+    _tgl_pins: Vec<InputPin>,
+    display:Display
 }
 
 impl PanelState{
-    pub fn new (tx:&Sender<u8>) -> Result<Self, rppal::gpio::Error>{
+    pub fn new (tx:&Sender<u8>) -> Result<Self, PanelError>{
         let gpio = Gpio::new()?;
         let leds = Self::init_leds(&gpio)?;
         
@@ -38,8 +53,15 @@ impl PanelState{
             })
             .collect::<Result<Vec<InputPin>, rppal::gpio::Error>>()?;
 
+        let mut display = Display::new()?;
         
-        Ok(Self { app_1:false, app_2:false, app_3:false, lan:false, leds:leds, ev_target_perc:95, _tgl_pins:tgl_pins })
+        display.update();
+        std::thread::sleep(std::time::Duration::from_millis(50));
+        display.update();
+        
+        println!("UPDATED DISPLAY");
+
+        Ok(Self { app_1:false, app_2:false, app_3:false, lan:false, leds:leds, ev_target_perc:95, _tgl_pins:tgl_pins,  display:display })
     }
 
     pub fn handle_pin(&mut self, pin:u8){

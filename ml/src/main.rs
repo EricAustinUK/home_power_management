@@ -1,4 +1,6 @@
 mod rill_structs;
+use std::path::Path;
+
 use linfa_elasticnet::ElasticNet;
 use rill_structs::*;
 use ndarray::{Axis, Array1, Array2, s};
@@ -118,7 +120,10 @@ fn main() {
         model: stored_model
     };
 
-    std::fs::write("output/model.bin", postcard::to_allocvec(&stored_snapshot).unwrap()).unwrap();
+    let model_path = Path::new("output/model.bin");
+
+    std::fs::create_dir_all(model_path.parent().unwrap()).unwrap();
+    std::fs::write(model_path, postcard::to_allocvec(&stored_snapshot).unwrap()).unwrap();
     println!("Model saved successfully");
 
     let samples = x.nrows();

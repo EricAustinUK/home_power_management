@@ -1,2 +1,3 @@
 [target.arm-unknown-linux-musleabihf]
-linker = "arm-linux-gnueabihf-gcc"
+linker = "/mnt/projects/home_power_management/buildroot/output/host/bin/arm-linux-gcc"
+rustflags = ["-C", "target-feature=-crt-static"]

@@ -1,0 +1,333 @@
+export component App inherits Window {
+    background: #1e1e1eff;
+    width: 128px;
+    height: 160px;
+    id_1-4512 := Rectangle { /* LCD */
+        width: 128px;
+        height: 160px;
+        x: 0px;
+        y: 0px;
+        background: #ffffffff;
+        clip: true;
+        id_1-4515 := Rectangle { /* TopBar */
+            width: 128px;
+            height: 20px;
+            x: 0px;
+            y: 0px;
+            background: #fff4a4ff;
+            clip: true;
+            id_1-4526 := Rectangle { /* DateTime */
+                width: 108px;
+                height: 20px;
+                x: 0px;
+                y: 0px;
+                clip: true;
+                id_5-11 := Rectangle { /* Date */
+                    width: 64px;
+                    height: 20px;
+                    x: 0px;
+                    y: 0px;
+                    clip: true;
+                    id_5-6 := Text { /* DateField */
+                        width: 64px;
+                        height: 20px;
+                        x: 0px;
+                        y: 0px;
+                        text: "26/08/26";
+                        font-family: "DejaVu Sans";
+                        font-size: 12px;
+                        font-weight: 400;
+                        horizontal-alignment: center;
+                        vertical-alignment: center;
+                        letter-spacing: 0px;
+                        color: #000000ff;
+                    }
+                }
+                id_5-10 := Rectangle { /* Time */
+                    width: 44px;
+                    height: 20px;
+                    x: 64px;
+                    y: 0px;
+                    clip: true;
+                    id_5-2 := Text { /* TimeField */
+                        width: 44px;
+                        height: 20px;
+                        x: 0px;
+                        y: 0px;
+                        text: "09:00";
+                        font-family: "DejaVu Sans";
+                        font-size: 12px;
+                        font-weight: 400;
+                        horizontal-alignment: center;
+                        vertical-alignment: center;
+                        letter-spacing: 0px;
+                        color: #000000ff;
+                    }
+                }
+            }
+            id_14-7 := Rectangle { /* StateIcon */
+                width: 20px;
+                height: 20px;
+                x: 108px;
+                y: 0px;
+                clip: true;
+                id_I5-57_7758-12329 := Path { /* Icon */
+                    width: 18.333334px;
+                    height: 18.333334px;
+                    x: 0.8333359px;
+                    y: 0.8333333px;
+                    commands: "M10.4167 0C10.4167 -0.690356 9.85702 -1.25 9.16667 -1.25C8.47631 -1.25 7.91667 -0.690356 7.91667 0L9.16667 0L10.4167 0ZM7.91667 1.66667C7.91667 2.35702 8.47631 2.91667 9.16667 2.91667C9.85702 2.91667 10.4167 2.35702 10.4167 1.66667L9.16667 1.66667L7.91667 1.66667ZM10.4167 16.6667C10.4167 15.9763 9.85702 15.4167 9.16667 15.4167C8.47631 15.4167 7.91667 15.9763 7.91667 16.6667L9.16667 16.6667L10.4167 16.6667ZM7.91667 18.3333C7.91667 19.0237 8.47631 19.5833 9.16667 19.5833C9.85702 19.5833 10.4167 19.0237 10.4167 18.3333L9.16667 18.3333L7.91667 18.3333ZM3.56722 1.79945C3.07906 1.31129 2.28761 1.31129 1.79945 1.79945C1.31129 2.28761 1.31129 3.07906 1.79945 3.56722L2.68333 2.68333L3.56722 1.79945ZM2.98278 4.75055C3.47094 5.23871 4.26239 5.23871 4.75055 4.75055C5.23871 4.26239 5.23871 3.47094 4.75055 2.98278L3.86667 3.86667L2.98278 4.75055ZM15.3506 13.5828C14.8624 13.0946 14.0709 13.0946 13.5828 13.5828C13.0946 14.0709 13.0946 14.8624 13.5828 15.3506L14.4667 14.4667L15.3506 13.5828ZM14.7661 16.5339C15.2543 17.022 16.0457 17.022 16.5339 16.5339C17.022 16.0457 17.022 15.2543 16.5339 14.7661L15.65 15.65L14.7661 16.5339ZM0 7.91667C-0.690356 7.91667 -1.25 8.47631 -1.25 9.16667C-1.25 9.85702 -0.690356 10.4167 0 10.4167L0 9.16667L0 7.91667ZM1.66667 10.4167C2.35702 10.4167 2.91667 9.85702 2.91667 9.16667C2.91667 8.47631 2.35702 7.91667 1.66667 7.91667L1.66667 9.16667L1.66667 10.4167ZM16.6667 7.91667C15.9763 7.91667 15.4167 8.47631 15.4167 9.16667C15.4167 9.85702 15.9763 10.4167 16.6667 10.4167L16.6667 9.16667L16.6667 7.91667ZM18.3333 10.4167C19.0237 10.4167 19.5833 9.85702 19.5833 9.16667C19.5833 8.47631 19.0237 7.91667 18.3333 7.91667L18.3333 9.16667L18.3333 10.4167ZM1.79945 14.7661C1.31129 15.2543 1.31129 16.0457 1.79945 16.5339C2.28761 17.022 3.07906 17.022 3.56722 16.5339L2.68333 15.65L1.79945 14.7661ZM4.75055 15.3506C5.23871 14.8624 5.23871 14.0709 4.75055 13.5828C4.26239 13.0946 3.47094 13.0946 2.98278 13.5828L3.86667 14.4667L4.75055 15.3506ZM13.5828 2.98278C13.0946 3.47094 13.0946 4.26239 13.5828 4.75055C14.0709 5.23871 14.8624 5.23871 15.3506 4.75055L14.4667 3.86667L13.5828 2.98278ZM16.5339 3.56722C17.022 3.07906 17.022 2.28761 16.5339 1.79945C16.0457 1.31129 15.2543 1.31129 14.7661 1.79945L15.65 2.68333L16.5339 3.56722ZM13.3333 9.16667L12.0833 9.16667C12.0833 10.7775 10.7775 12.0833 9.16667 12.0833L9.16667 13.3333L9.16667 14.5833C12.1582 14.5833 14.5833 12.1582 14.5833 9.16667L13.3333 9.16667ZM9.16667 13.3333L9.16667 12.0833C7.55584 12.0833 6.25 10.7775 6.25 9.16667L5 9.16667L3.75 9.16667C3.75 12.1582 6.17512 14.5833 9.16667 14.5833L9.16667 13.3333ZM5 9.16667L6.25 9.16667C6.25 7.55584 7.55584 6.25 9.16667 6.25L9.16667 5L9.16667 3.75C6.17512 3.75 3.75 6.17512 3.75 9.16667L5 9.16667ZM9.16667 5L9.16667 6.25C10.7775 6.25 12.0833 7.55584 12.0833 9.16667L13.3333 9.16667L14.5833 9.16667C14.5833 6.17512 12.1582 3.75 9.16667 3.75L9.16667 5ZM9.16667 0L7.91667 0L7.91667 1.66667L9.16667 1.66667L10.4167 1.66667L10.4167 0L9.16667 0ZM9.16667 16.6667L7.91667 16.6667L7.91667 18.3333L9.16667 18.3333L10.4167 18.3333L10.4167 16.6667L9.16667 16.6667ZM2.68333 2.68333L1.79945 3.56722L2.98278 4.75055L3.86667 3.86667L4.75055 2.98278L3.56722 1.79945L2.68333 2.68333ZM14.4667 14.4667L13.5828 15.3506L14.7661 16.5339L15.65 15.65L16.5339 14.7661L15.3506 13.5828L14.4667 14.4667ZM0 9.16667L0 10.4167L1.66667 10.4167L1.66667 9.16667L1.66667 7.91667L0 7.91667L0 9.16667ZM16.6667 9.16667L16.6667 10.4167L18.3333 10.4167L18.3333 9.16667L18.3333 7.91667L16.6667 7.91667L16.6667 9.16667ZM2.68333 15.65L3.56722 16.5339L4.75055 15.3506L3.86667 14.4667L2.98278 13.5828L1.79945 14.7661L2.68333 15.65ZM14.4667 3.86667L15.3506 4.75055L16.5339 3.56722L15.65 2.68333L14.7661 1.79945L13.5828 2.98278L14.4667 3.86667Z";
+                    fill-rule: nonzero;
+                    stroke-width: 2.5px;
+                    stroke: #1e1e1eff;
+                }
+                id_I5-58_7758-11944 := Path { /* Icon */
+                    width: 14.968179px;
+                    height: 14.968179px;
+                    x: 2.5318222px;
+                    y: 2.5000002px;
+                    commands: "M14.9682 8.15833L15.9639 8.25035C16.0002 7.85786 15.8025 7.48068 15.4592 7.28716C15.1158 7.09364 14.6907 7.11988 14.3738 7.35417L14.9682 8.15833ZM6.80985 0L7.61401 0.594407C7.8483 0.277437 7.87454 -0.147593 7.68102 -0.490976C7.4875 -0.834359 7.11031 -1.03203 6.71783 -0.995757L6.80985 0ZM14.9682 8.15833L13.9724 8.06631C13.8588 9.29568 13.3974 10.4673 12.6423 11.444L13.4334 12.0557L14.2245 12.6673C15.212 11.3901 15.8154 9.85799 15.9639 8.25035L14.9682 8.15833ZM13.4334 12.0557L12.6423 11.444C11.8871 12.4207 10.8694 13.1622 9.70821 13.5816L10.0479 14.5221L10.3877 15.4626C11.9061 14.9142 13.237 13.9446 14.2245 12.6673L13.4334 12.0557ZM10.0479 14.5221L9.70821 13.5816C8.54703 14.001 7.29041 14.0811 6.0854 13.8124L5.86776 14.7884L5.65013 15.7644C7.22592 16.1158 8.86919 16.0111 10.3877 15.4626L10.0479 14.5221ZM5.86776 14.7884L6.0854 13.8124C4.88038 13.5437 3.77681 12.9374 2.90381 12.0644L2.1967 12.7715L1.48959 13.4786C2.63121 14.6202 4.07434 15.4131 5.65013 15.7644L5.86776 14.7884ZM2.1967 12.7715L2.90381 12.0644C2.03081 11.1914 1.42449 10.0878 1.1558 8.88278L0.179769 9.10042L-0.796262 9.31805C-0.444898 10.8938 0.347979 12.337 1.48959 13.4786L2.1967 12.7715ZM0.179769 9.10042L1.1558 8.88278C0.88711 7.67777 0.967162 6.42115 1.38659 5.25997L0.446063 4.92025L-0.494462 4.58052C-1.04294 6.09899 -1.14763 7.74226 -0.796262 9.31805L0.179769 9.10042ZM0.446063 4.92025L1.38659 5.25997C1.80601 4.09879 2.54747 3.08108 3.52419 2.32591L2.91252 1.53479L2.30086 0.743676C1.02361 1.7312 0.054018 3.06206 -0.494462 4.58052L0.446063 4.92025ZM2.91252 1.53479L3.52419 2.32591C4.50091 1.57075 5.6725 1.10937 6.90187 0.995757L6.80985 0L6.71783 -0.995757C5.11019 -0.847191 3.57811 -0.243847 2.30086 0.743676L2.91252 1.53479ZM6.80985 0L6.00568 -0.594407C5.03282 0.721758 4.56468 2.34339 4.68639 3.97554L5.68362 3.90118L6.68085 3.82681C6.59476 2.67236 6.92589 1.52535 7.61401 0.594407L6.80985 0ZM5.68362 3.90118L4.68639 3.97554C4.80811 5.6077 5.51159 7.14196 6.66891 8.29927L7.37601 7.59217L8.08312 6.88506C7.26453 6.06647 6.76694 4.98126 6.68085 3.82681L5.68362 3.90118ZM7.37601 7.59217L6.66891 8.29927C7.82622 9.45659 9.36048 10.1601 10.9926 10.2818L11.067 9.28456L11.1414 8.28733C9.98692 8.20123 8.90171 7.70365 8.08312 6.88506L7.37601 7.59217ZM11.067 9.28456L10.9926 10.2818C12.6248 10.4035 14.2464 9.93536 15.5626 8.9625L14.9682 8.15833L14.3738 7.35417C13.4428 8.04229 12.2958 8.37342 11.1414 8.28733L11.067 9.28456Z";
+                    fill-rule: nonzero;
+                    stroke-width: 2px;
+                    stroke: #1e1e1eff;
+                }
+            }
+        }
+        id_1-4528 := Rectangle { /* PVInfo */
+            width: 128px;
+            height: 36px;
+            x: 0px;
+            y: 20px;
+            background: #c1ffe6ff;
+            clip: true;
+            id_1-4529 := Rectangle { /* SolarSection */
+                width: 64px;
+                height: 36px;
+                x: 0px;
+                y: 0px;
+                clip: true;
+                id_6-65 := Text { /* Label */
+                    width: 64px;
+                    height: 18px;
+                    x: 0px;
+                    y: 0px;
+                    text: "Solar Est:";
+                    font-family: "DejaVu Sans";
+                    font-size: 12px;
+                    font-weight: 400;
+                    horizontal-alignment: center;
+                    vertical-alignment: center;
+                    letter-spacing: 0px;
+                    color: #000000ff;
+                }
+                id_6-63 := Text { /* SolarEstField */
+                    width: 64px;
+                    height: 18px;
+                    x: 0px;
+                    y: 18px;
+                    text: "0Wh";
+                    font-family: "DejaVu Sans";
+                    font-size: 12px;
+                    font-weight: 400;
+                    horizontal-alignment: center;
+                    vertical-alignment: center;
+                    letter-spacing: 0px;
+                    color: #000000ff;
+                }
+            }
+            id_1-4530 := Rectangle { /* UsageSection */
+                width: 64px;
+                height: 36px;
+                x: 64px;
+                y: 0px;
+                clip: true;
+                id_5-51 := Text { /* Label */
+                    width: 64px;
+                    height: 18px;
+                    x: 0px;
+                    y: 0px;
+                    text: "Usage Est:";
+                    font-family: "DejaVu Sans";
+                    font-size: 12px;
+                    font-weight: 400;
+                    horizontal-alignment: center;
+                    vertical-alignment: center;
+                    letter-spacing: 0px;
+                    color: #000000ff;
+                }
+                id_5-52 := Text { /* UsageEstField */
+                    width: 64px;
+                    height: 18px;
+                    x: 0px;
+                    y: 18px;
+                    text: "0Wh";
+                    font-family: "DejaVu Sans";
+                    font-size: 12px;
+                    font-weight: 400;
+                    horizontal-alignment: center;
+                    vertical-alignment: center;
+                    letter-spacing: 0px;
+                    color: #000000ff;
+                }
+            }
+        }
+        id_1-4514 := Rectangle { /* SoCSection */
+            width: 128px;
+            height: 56px;
+            x: 0px;
+            y: 56px;
+            background: #c1c4faff;
+            clip: true;
+            id_1-4522 := Rectangle { /* SoCInfo */
+                width: 128px;
+                height: 20px;
+                x: 0px;
+                y: 0px;
+                clip: true;
+                id_9-122 := Text { /* Label */
+                    width: 120px;
+                    height: 20px;
+                    x: 4px;
+                    y: 0px;
+                    text: "Home Battery SoC:";
+                    font-family: "DejaVu Sans";
+                    font-size: 12px;
+                    font-weight: 400;
+                    horizontal-alignment: center;
+                    vertical-alignment: center;
+                    letter-spacing: 0px;
+                    color: #000000ff;
+                }
+            }
+            id_9-120 := Rectangle { /* BarSection */
+                width: 128px;
+                height: 36px;
+                x: 0px;
+                y: 20px;
+                clip: true;
+                id_6-61 := Text { /* MinField */
+                    width: 32px;
+                    height: 18px;
+                    x: 0px;
+                    y: 0px;
+                    text: "Min%";
+                    font-family: "DejaVu Sans";
+                    font-size: 12px;
+                    font-weight: 400;
+                    horizontal-alignment: center;
+                    vertical-alignment: center;
+                    letter-spacing: 0px;
+                    color: #000000ff;
+                }
+                id_9-124 := Text { /* MaxField */
+                    width: 32px;
+                    height: 18px;
+                    x: 96px;
+                    y: 0px;
+                    text: "Max%";
+                    font-family: "DejaVu Sans";
+                    font-size: 12px;
+                    font-weight: 400;
+                    horizontal-alignment: center;
+                    vertical-alignment: center;
+                    letter-spacing: 0px;
+                    color: #000000ff;
+                }
+                id_9-91 := Rectangle { /* SoCBar */
+                    width: 128px;
+                    height: 18px;
+                    x: 0px;
+                    y: 18px;
+                    clip: true;
+                    id_9-87 := Rectangle { /* ChargeBar */
+                        width: 128px;
+                        height: 18px;
+                        x: 0px;
+                        y: 0px;
+                        clip: true;
+                        id_9-88 := Rectangle { /* Charge */
+                            width: 80px;
+                            height: 18px;
+                            x: 0px;
+                            y: 0px;
+                            background: #135e18ff;
+                            clip: true;
+                            id_9-89 := Text { /* MinLabel */
+                                width: 28px;
+                                height: 18px;
+                                x: 52px;
+                                y: 0px;
+                                text: "67%";
+                                font-family: "DejaVu Sans";
+                                font-size: 12px;
+                                font-weight: 400;
+                                horizontal-alignment: center;
+                                vertical-alignment: center;
+                                letter-spacing: 0px;
+                                color: #fae4e4ff;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        id_1-4532 := Rectangle { /* EVSection */
+            width: 128px;
+            height: 48px;
+            x: 0px;
+            y: 112px;
+            background: #cee6bfff;
+            clip: true;
+            id_1-4534 := Rectangle { /* EVInfo */
+                width: 128px;
+                height: 30px;
+                x: 0px;
+                y: 0px;
+                clip: true;
+                id_9-84 := Text { /* Label */
+                    width: 120px;
+                    height: 30px;
+                    x: 4px;
+                    y: 0px;
+                    text: "EV SoC:";
+                    font-family: "DejaVu Sans";
+                    font-size: 12px;
+                    font-weight: 400;
+                    horizontal-alignment: center;
+                    vertical-alignment: bottom;
+                    letter-spacing: 0px;
+                    color: #000000ff;
+                }
+            }
+            id_I9-115_9-87 := Rectangle { /* ChargeBar */
+                width: 128px;
+                height: 18px;
+                x: 0px;
+                y: 30px;
+                clip: true;
+                id_I9-115_9-88 := Rectangle { /* Charge */
+                    width: 80px;
+                    height: 18px;
+                    x: 0px;
+                    y: 0px;
+                    background: #135e18ff;
+                    clip: true;
+                    id_I9-115_9-89 := Text { /* MinLabel */
+                        width: 28px;
+                        height: 18px;
+                        x: 52px;
+                        y: 0px;
+                        text: "67%";
+                        font-family: "DejaVu Sans";
+                        font-size: 12px;
+                        font-weight: 400;
+                        horizontal-alignment: center;
+                        vertical-alignment: center;
+                        letter-spacing: 0px;
+                        color: #fae4e4ff;
+                    }
+                }
+            }
+        }
+    }
+}

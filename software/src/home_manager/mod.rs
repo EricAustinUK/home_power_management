@@ -5,7 +5,7 @@ mod weather_data;
 
 pub use iot_controller::IoTError;
 use iot_controller::{IoTController, IoTConfig};
-use control_panel::PanelState;
+use control_panel::{PanelError, PanelState};
 use time::{Date, OffsetDateTime};
 use url::Url;
 use std::{str::FromStr, sync::mpsc::{Receiver}};
@@ -20,13 +20,13 @@ use crate::home_manager::weather_data::WeatherData;
 #[derive(Debug, Error)]
 pub enum HomeManagerError {
     #[error("Error with IoT layer: {0}")]
-    IoTError(#[from] IoTError),
+    IoT(#[from] IoTError),
     
     #[error("Error from ML layer: {0}")]
-    MLError(#[from] MLError),
+    ML(#[from] MLError),
 
     #[error("GPIO error: {0}")]
-    GPIO(#[from] rppal::gpio::Error),
+    Panel(#[from] PanelError),
 
     #[error("Error importing .env: {0}")]
     DotEnv(#[from] DotEnvError),
@@ -96,7 +96,7 @@ impl HomeManager{
         
         match self.run_state_action(state, new_state) {
             Ok(()) => (),
-            Err(HomeManagerError::IoTError(IoTError::Endpoint(_))) => self.control_panel.set_lan(false),
+            Err(HomeManagerError::IoT(IoTError::Endpoint(_))) => self.control_panel.set_lan(false),
             Err(e) => return Err(e) 
         }
         self.update_ev_charger()?;
