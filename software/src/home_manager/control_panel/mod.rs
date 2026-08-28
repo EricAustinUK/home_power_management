@@ -1,15 +1,20 @@
-use std::{sync::mpsc::Sender, time::Duration};
+use std::{sync::mpsc::{RecvTimeoutError, Sender}, time::Duration};
 use rppal::gpio::{Gpio, InputPin, Level, OutputPin, Trigger};
 use thiserror::Error;
 
 mod display;
-use display::{Display, DisplayError};
+use display::{Display, DisplayError, DisplayData};
+
+use crate::home_manager::{HomeManagerData, State, TimeState::Tariff};
 
 #[derive(Error, Debug)]
 pub enum PanelError {
     #[error("Error with GPIO pins: {0}")]
     GPIO(#[from] rppal::gpio::Error),
     
+    #[error("Error with GPIO interrupt receiver: {0}")]
+    Recv(#[from] RecvTimeoutError),
+
     #[error("Error connecting slint to display: {0}")]
     Display(#[from] DisplayError),
 }
@@ -53,15 +58,25 @@ impl PanelState{
             })
             .collect::<Result<Vec<InputPin>, rppal::gpio::Error>>()?;
 
-        let mut display = Display::new()?;
-        
-        display.update();
-        std::thread::sleep(std::time::Duration::from_millis(50));
-        display.update();
-        
-        println!("UPDATED DISPLAY");
+        Ok(Self { app_1:false, app_2:false, app_3:false, lan:false, leds:leds, ev_target_perc:95, _tgl_pins:tgl_pins,  display:Display::new()? })
+    }
 
-        Ok(Self { app_1:false, app_2:false, app_3:false, lan:false, leds:leds, ev_target_perc:95, _tgl_pins:tgl_pins,  display:display })
+    pub fn update(&mut self, data:&HomeManagerData, date_str:String, time_str:String){
+        self.display.update(
+            DisplayData {
+                date_str:date_str,
+                time_str:time_str,
+                solar_est_wh:data.exp_solar_prod_wh.iter().sum(),
+                usage_est_wh:self.get_usage_est(data.exp_house_usg_wh),
+                home_soc_percent:data.home_soc,
+                ev_soc_percent:data.ev_soc,
+                ev_soc_target:self.ev_target_perc,
+                home_soc_min:data.home_soc_min as u8,
+                home_soc_max:data.home_soc_max as u8,
+                tariff:match data.state { State::Online(Tariff) => true, _ => false }, // wont be displayed anyway if false
+                online:match data.state { State::Online(_) => true, State::Offline => false }
+            }
+        )
     }
 
     pub fn handle_pin(&mut self, pin:u8){
@@ -92,6 +107,11 @@ impl PanelState{
         let led_lan = gpio.get(22)?.into_output();
 
         Ok([led_app1, led_app2, led_app3, led_lan])
+    }
+
+    pub fn get_usage_est(&self, base_load:f64) -> f64{
+        // todo: make app appliance pvs configurable
+        base_load + if self.app_1 {2400.} else {0.} + if self.app_2 {0.} else {0.} + if self.app_3 {0.} else {0.}
     }
 
 }

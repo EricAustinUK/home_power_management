@@ -6,10 +6,8 @@ use st7735_lcd::Orientation;
 use slint::platform::software_renderer::MinimalSoftwareWindow;
 use slint::platform::Platform;
 use std::rc::Rc;
-use std::time::{Instant, Duration};
+use std::time::Instant;
 use thiserror::Error;
-
-use crate::home_manager::control_panel::display;
 
 slint::include_modules!();
 
@@ -36,6 +34,20 @@ pub struct Display {
     pub _driver: ST7735<SimpleHalSpiDevice, OutputPin, OutputPin>,
     window: Rc<MinimalSoftwareWindow>,
     buffer: Vec<slint::platform::software_renderer::Rgb565Pixel>,
+}
+
+pub struct DisplayData {
+    pub date_str:String,
+    pub time_str:String,
+    pub solar_est_wh:f64,
+    pub usage_est_wh: f64,
+    pub home_soc_percent:f32,
+    pub ev_soc_percent:f32,
+    pub ev_soc_target:u8,
+    pub home_soc_min:u8,
+    pub home_soc_max:u8,
+    pub tariff:bool,
+    pub online:bool,
 }
 
  struct PiDisplayPlatform {
@@ -90,9 +102,21 @@ impl Display {
         Ok(Self { ui, _driver: disp, window, buffer })
     }
 
-    pub fn update(&mut self) {
-        slint::platform::update_timers_and_animations();
+    pub fn update(&mut self, display_data:DisplayData) {
+        self.ui.set_date_str(display_data.date_str.into());
+        self.ui.set_time_str(display_data.time_str.into());
+        self.ui.set_solar_est_wh(display_data.solar_est_wh as i32);
+        self.ui.set_usage_est_wh(display_data.usage_est_wh as i32);
+        self.ui.set_home_soc_percent(display_data.home_soc_percent);
+        self.ui.set_ev_soc_percent(display_data.ev_soc_percent);
+        self.ui.set_ev_soc_target(display_data.ev_soc_target as i32);
+        self.ui.set_home_soc_min(display_data.home_soc_min as i32);
+        self.ui.set_home_soc_max(display_data.home_soc_max as i32);
+        self.ui.set_tariff(display_data.tariff);
+        self.ui.set_online(display_data.online);
         
+
+        slint::platform::update_timers_and_animations();
         self.window.request_redraw(); 
 
         self.window.draw_if_needed(|renderer| {

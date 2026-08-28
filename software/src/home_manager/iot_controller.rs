@@ -47,7 +47,6 @@ pub struct IoTConfig {
 
 pub struct IoTController{
     ureq_agent:Agent,
-    iot_up:bool,
     iot_config: IoTConfig
 }
 
@@ -70,17 +69,12 @@ impl IoTController{
         .build();
 
         let agent = agent_cfg.into();
-        let mut iot_controller  = Self { ureq_agent:agent, iot_up:false, iot_config:cfg };
-
-        iot_controller.iot_up = iot_controller.test_endpoints(true)?;
+        let iot_controller  = Self { ureq_agent:agent, iot_config:cfg };
 
         Ok(iot_controller)
     }
 
-    pub fn test_endpoints(&self, use_cached:bool) -> Result<bool, IoTError>{
-        if self.iot_up && use_cached {
-            return Ok(true)
-        }
+    pub fn test_endpoints(&self) -> Result<bool, IoTError>{
         match self.blank_endpoint_fetch() {
             Ok(()) => Ok(true),
             Err(IoTError::Endpoint(_)) => Ok(false),
@@ -178,7 +172,7 @@ impl IoTController{
     }
 
     pub fn fetch_hourly_solar_output_wh(&self, date:Date) -> Result<[f64; 24], IoTError>{
-        let local_offset = UtcOffset::current_local_offset().unwrap_or(UtcOffset::UTC);
+        let local_offset = UtcOffset::current_local_offset()?;
 
         let start_time = date.with_time(Time::from_hms(5, 0, 0).unwrap());
         let start_dt = start_time.assume_offset(local_offset);

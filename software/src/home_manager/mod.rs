@@ -6,7 +6,7 @@ mod weather_data;
 pub use iot_controller::IoTError;
 use iot_controller::{IoTController, IoTConfig};
 use control_panel::{PanelError, PanelState};
-use time::{Date, OffsetDateTime};
+use time::{Time, Date, OffsetDateTime, macros::time};
 use url::Url;
 use std::{str::FromStr, sync::mpsc::{Receiver}};
 use std::{env, time::Duration};
@@ -16,6 +16,9 @@ use dotenvy::dotenv;
 use ureq::{http::Uri};
 
 use crate::home_manager::weather_data::WeatherData;
+
+const TARIFF_START:Time = time!(23:30);
+const TARIFF_END:Time = time!(5:30);
 
 #[derive(Debug, Error)]
 pub enum HomeManagerError {
@@ -32,10 +35,16 @@ pub enum HomeManagerError {
     DotEnv(#[from] DotEnvError),
 }
 
-#[derive(Clone)]
+#[derive(Clone, Copy)]
 pub enum State{
-    Tariff,
-    Standard
+    Offline,
+    Online(TimeState)
+}
+
+#[derive(Clone, Copy)]
+pub enum TimeState{
+    Standard,
+    Tariff
 }
 
 struct HomeManagerEnv{
@@ -63,13 +72,23 @@ pub enum DotEnvError {
     },
 }
 
-pub struct HomeManager{
+#[derive(Clone)]
+struct HomeManagerData{
+    state:State,
     exp_solar_prod_wh:[f64; 24],
     exp_house_usg_wh:f64,
+    home_soc:f32,
+    ev_soc:f32,
+    home_soc_min:f32,
+    home_soc_max:f32
+}
+
+pub struct HomeManager{
     control_panel:PanelState,
     iot_controller:IoTController,
     ml_engine:MLEngine,
-    pub gpio_rx:Receiver<u8>
+    data:HomeManagerData,
+    gpio_rx:Receiver<u8>
 }
 
 impl HomeManager{
@@ -78,8 +97,15 @@ impl HomeManager{
         let env = Self::load_env()?;
         
         Ok(Self {
-            exp_solar_prod_wh:[0.; 24],
-            exp_house_usg_wh:3600.,
+            data:HomeManagerData {
+                state:State::Offline,
+                exp_solar_prod_wh:[0.; 24],
+                exp_house_usg_wh:3600.,
+                ev_soc:0.,
+                home_soc:0.,
+                home_soc_min:23.,
+                home_soc_max:95.
+            },
             control_panel:PanelState::new(&tx)?,
             iot_controller:IoTController::new(env.iot_cfg)?,
             ml_engine:MLEngine::new(env.model_bytes, env.model_data_path)?,
@@ -87,38 +113,72 @@ impl HomeManager{
         })
     }
 
-    pub fn state_loop(&mut self, state:&mut State, new_state:&State) -> Result<(), HomeManagerError>{
-        if !self.iot_controller.test_endpoints(true)?{
-            self.control_panel.set_lan(false);
-            return Ok(())
-        }
-        self.control_panel.set_lan(true);
-        
-        match self.run_state_action(state, new_state) {
-            Ok(()) => (),
-            Err(HomeManagerError::IoT(IoTError::Endpoint(_))) => self.control_panel.set_lan(false),
-            Err(e) => return Err(e) 
-        }
-        self.update_ev_charger()?;
-
-        *state = new_state.clone();
+    pub fn state_loop(&mut self, new_state:&TimeState, date_str:String, time_str:String) -> Result<(), HomeManagerError>{
+        self.run_state_action(new_state)?;
+        self.control_panel.update(&self.data, date_str, time_str);
 
         Ok(())
     }
 
-    fn run_state_action(&mut self, state:&State, new_state:&State) -> Result<(), HomeManagerError>{
-        match (state.clone(), new_state.clone()) {
-            (State::Tariff, State::Standard) => {
-                self.tariff_end()?;
-            },
-            (State::Tariff, State::Tariff) => {
-                self.tariff_update()?;
-            },
-            (State::Standard, State::Tariff) => {
-                self.tariff_start()?;
-            },
-            (State::Standard, State::Standard) => ()
+    pub fn run(&mut self) -> Result<(), HomeManagerError>{
+        loop{
+            let now = time::OffsetDateTime::now_local().map_err(|e| HomeManagerError::IoT(IoTError::LocalTimeError(e)))?;
+            let date = now.date();
+            let time = now.time();
+            let date_str = format!("{:02}/{:02}/{}", date.day(), date.month() as u8, (date.year() % 100).abs());
+            let time_str = format!("{:02}:{:02}", time.hour(), time.minute());
+
+            match self.gpio_rx.recv_timeout(Duration::from_secs(5)){
+                Ok(pin) => {
+                    self.handle_pin(pin);
+                    self.control_panel.update(&self.data, date_str, time_str);
+                },
+                Err(std::sync::mpsc::RecvTimeoutError::Timeout) => {
+                    let now = OffsetDateTime::now_local().map_err(|e| HomeManagerError::IoT(IoTError::LocalTimeError(e)))?;
+                    let new_state = if now.time() > TARIFF_END && now.time() < TARIFF_START {TimeState::Standard} else {TimeState::Tariff};
+                    self.state_loop(&new_state, date_str, time_str)?;
+                },
+                Err(e) => {
+                    return Err(HomeManagerError::Panel(PanelError::Recv(e)));
+                }
+            }
         }
+    }
+
+    fn run_state_action(&mut self, new_state:&TimeState) -> Result<(), HomeManagerError>{
+        match (self.data.state, new_state) {
+            (State::Offline, ts) => {
+                if self.iot_controller.test_endpoints()?{
+                    match *ts {
+                        TimeState::Tariff => if !self.try_tariff_start()? {self.data.state = State::Offline; return Ok(())},
+                        TimeState::Standard => return Ok(())
+                    }
+                }else{
+                    return Ok(()) // early return if offline
+                }
+            },
+            (State::Online(TimeState::Tariff), TimeState::Standard) => {
+                if !self.try_tariff_end()? {
+                    self.data.state = State::Offline;
+                    return Ok(())
+                }
+            },
+            (State::Online(TimeState::Tariff), TimeState::Tariff) => {
+                if !self.try_tariff_update()? {
+                    self.data.state = State::Offline;
+                    return Ok(())
+                }
+            },
+            (State::Online(TimeState::Standard), TimeState::Tariff) => {
+                if !self.try_tariff_start()? {
+                    self.data.state = State::Offline;
+                    return Ok(())
+                }
+            },
+            (State::Online(TimeState::Standard), TimeState::Standard) => ()
+        }
+        self.update_ev_charger()?;
+        self.data.state =  State::Online(*new_state);
         Ok(())
     }
 
@@ -135,6 +195,39 @@ impl HomeManager{
         self.control_panel.handle_pin(pin);
     }
 
+    fn try_tariff_start(&mut self) -> Result<bool, HomeManagerError>{
+        match self.tariff_start() {
+            Ok(()) => Ok(true),
+            Err(HomeManagerError::IoT(IoTError::Endpoint(_))) => {
+                self.data.state = State::Offline;
+                Ok(false)
+            },
+            Err(e) => Err(e)
+        }
+    }
+
+    fn try_tariff_end(&mut self) -> Result<bool, HomeManagerError>{
+        match self.tariff_end() {
+            Ok(()) => Ok(true),
+            Err(HomeManagerError::IoT(IoTError::Endpoint(_))) => {
+                self.data.state = State::Offline;
+                Ok(false)
+            },
+            Err(e) => Err(e)
+        }
+    }
+
+    fn try_tariff_update(&mut self) -> Result<bool, HomeManagerError>{
+        match self.tariff_update() {
+            Ok(()) => Ok(true),
+            Err(HomeManagerError::IoT(IoTError::Endpoint(_))) => {
+                self.data.state = State::Offline;
+                Ok(false)
+            },
+            Err(e) => Err(e)
+        }
+    }
+
     fn tariff_start(&mut self) -> Result<(), HomeManagerError>{
         // get previous date
         let current_time = OffsetDateTime::now_local().map_err(|e| IoTError::from(e))?;
@@ -142,7 +235,7 @@ impl HomeManager{
         let y_date = jic_offset.date();
         
         let real_solar_data = self.iot_controller.fetch_hourly_solar_output_wh(y_date)?;
-        let (real_total, est_total): (f64, f64) = self.exp_solar_prod_wh
+        let (real_total, est_total): (f64, f64) = self.data.exp_solar_prod_wh
             .iter()
             .zip(real_solar_data.iter())
             .fold((0., 0.), |(acc_est, acc_real), (est, real)| {
@@ -161,9 +254,9 @@ impl HomeManager{
 
         let t_date = y_date.next_day().unwrap(); // safe to unwrap until the heat death of the universe
         let exp_solar_out = self.predict(t_date)?;
-        self.exp_solar_prod_wh = exp_solar_out;
+        self.data.exp_solar_prod_wh = exp_solar_out;
         
-        println!("Expecting solar output to be {}Wh.",  self.exp_solar_prod_wh.iter().fold(0., |acc, n| acc + n));
+        println!("Expecting solar output to be {}Wh.",  self.data.exp_solar_prod_wh.iter().fold(0., |acc, n| acc + n));
 
         // Adjustment step
 
@@ -178,44 +271,36 @@ impl HomeManager{
     }
 
     fn tariff_update(&mut self) -> Result<(), HomeManagerError>{
-        // get time
         let current_time = OffsetDateTime::now_local().map_err(|e| IoTError::from(e))?;
         let jic_offset = current_time + Duration::from_hours(6);
         let t_date = jic_offset.date();
         
         // Inference step
-
         let exp_solar_out = self.predict(t_date)?;
-        self.exp_solar_prod_wh = exp_solar_out;
+        self.data.exp_solar_prod_wh = exp_solar_out;
         
         // Adjustment step
-
         self.update_soc_target()?;
 
         Ok(())
     }
 
     fn update_soc_target(&mut self) -> Result<(), IoTError>{
-        let mut est_usage = self.exp_house_usg_wh;
-        if self.control_panel.app_1 {est_usage+=2400.}; // TODO: add env for app Wh config
-        if self.control_panel.app_2 {est_usage+=0.};
-        if self.control_panel.app_3 {est_usage+=0.};
-
-        let total_solar:f64 = self.exp_solar_prod_wh.iter().fold(0., |acc, n| acc + n);
+        let est_usage:f64  = self.control_panel.get_usage_est(self.data.exp_house_usg_wh);
+        let total_solar:f64 = self.data.exp_solar_prod_wh.iter().fold(0., |acc, n| acc + n);
         
         let need_wh = est_usage - total_solar;
         if need_wh <= 0.{
-            self.iot_controller.set_min_soc(23)
+            self.iot_controller.set_min_soc(self.data.home_soc_min as u8)
         }else{
-            let need_perc_raw = (need_wh * 100. / 1920.).min(95.-23.);
+            let need_perc_raw = (need_wh * 100. / 1920.).min((self.data.home_soc_max-self.data.home_soc_min) as f64);
             let need_perc = need_perc_raw.round() as u8;
-            self.iot_controller.set_min_soc(23 + need_perc)
+            self.iot_controller.set_min_soc(self.data.home_soc_min as u8 + need_perc)
         }
     }
 
     pub fn update_ev_charger(&self) -> Result<(), IoTError>{
-        // should obtain a value from the variable resistor on the control panel, but for now just the limit of 95%
-        let target_perc = 95;
+        let target_perc = self.control_panel.ev_target_perc;
         match self.iot_controller.fetch_ev_info()?{
             (soc, true, true) => {
                 if soc >= target_perc {

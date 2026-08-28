@@ -9,9 +9,11 @@ export component App inherits Window {
     in property <int> usage_est_wh: 0;
     in property <float> home_soc_percent: 67.0;
     in property <float> ev_soc_percent: 67.0;
+    in property <int> ev_soc_target: 67.0;
     in property <int> home_soc_min: 0;
     in property <int> home_soc_max: 100;
     in property <bool> tariff: false;
+    in property <bool> online: false;
     
 
     id_1-4512 := Rectangle { /* LCD */
@@ -91,7 +93,7 @@ export component App inherits Window {
                     commands: "M9 5.5 A3.5 3.5 0 1 0 9.01 5.5 M9 2 L9 3.5 M9 14.5 L9 16 M2 9 L3.5 9 M14.5 9 L16 9 M4.05 4.05 L5.11 5.11 M12.89 12.89 L13.95 13.95 M4.05 13.95 L5.11 12.89 M12.89 5.11 L13.95 4.05";
                     stroke: #1e1e1eff;
                     stroke-width: 1.5px;
-                    visible: !tariff;
+                    visible: !tariff && online;
                 }
                 id_I5-58_7758-11944 := Path { /* Icon */
                     width: 14px;
@@ -101,7 +103,7 @@ export component App inherits Window {
                     commands: "M12 7.5 A4.5 4.5 0 1 1 5.8 2 A3.6 3.6 0 0 0 12 7.5 Z";
                     stroke: #1e1e1eff;
                     stroke-width: 1.5px;
-                    visible: tariff;
+                    visible: tariff && online;
                 }
             }
         }
@@ -301,7 +303,7 @@ export component App inherits Window {
                     height: 30px;
                     x: 4px;
                     y: 0px;
-                    text: "EV SoC:";
+                    text: "EV SoC (limit \{root.ev_soc_target}%):";
                     font-family: "DejaVu Sans";
                     font-size: 12px;
                     font-weight: 400;
