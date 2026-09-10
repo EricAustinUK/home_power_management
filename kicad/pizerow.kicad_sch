@@ -1785,7 +1785,6 @@
 		(in_bom yes)
 		(on_board yes)
 		(dnp no)
-		(fields_autoplaced yes)
 		(uuid "98f4fbc2-a93c-4309-880e-5be692c793cc")
 		(property "Reference" "J2"
 			(at 126.6541 55.88 0)
@@ -1824,6 +1823,15 @@
 			)
 		)
 		(property "Description" ""
+			(at 119.38 91.44 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "LCSC" "C2685142"
 			(at 119.38 91.44 0)
 			(effects
 				(font

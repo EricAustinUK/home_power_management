@@ -998,6 +998,15 @@
 				(hide yes)
 			)
 		)
+		(property "LCSC" "C98220"
+			(at 68.58 58.42 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
 		(pin "1"
 			(uuid "333ae736-94cc-4651-b514-d3d2cb0b18c5")
 		)
@@ -1060,6 +1069,15 @@
 			)
 		)
 		(property "Description" "Resistor"
+			(at 118.11 58.42 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "LCSC" "C98220"
 			(at 118.11 58.42 0)
 			(effects
 				(font
@@ -1138,6 +1156,15 @@
 				(hide yes)
 			)
 		)
+		(property "LCSC" "C98220"
+			(at 101.6 58.42 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
 		(pin "1"
 			(uuid "5b3ba41c-cc2a-48ec-8fe5-beddc4a0fa7d")
 		)
@@ -1208,6 +1235,15 @@
 				(hide yes)
 			)
 		)
+		(property "LCSC" "C139797"
+			(at 101.6 74.93 90)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
 		(pin "1"
 			(uuid "9c76883d-fb21-4f09-a781-015473d20841")
 		)
@@ -1270,6 +1306,15 @@
 			)
 		)
 		(property "Description" "Resistor"
+			(at 85.09 58.42 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "LCSC" "C98220"
 			(at 85.09 58.42 0)
 			(effects
 				(font
@@ -1348,6 +1393,15 @@
 				(hide yes)
 			)
 		)
+		(property "LCSC" "C139797"
+			(at 68.58 74.93 90)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
 		(pin "1"
 			(uuid "8509ee39-09ed-4439-a1f0-0624dc9c74e0")
 		)
@@ -1418,6 +1472,15 @@
 				(hide yes)
 			)
 		)
+		(property "LCSC" "C139797"
+			(at 134.62 74.93 90)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
 		(pin "1"
 			(uuid "93466aef-9ea5-49e7-b416-8ad57ca7030f")
 		)
@@ -1481,6 +1544,15 @@
 		)
 		(property "Description" "Push button switch, generic, two pins"
 			(at 118.11 74.93 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "LCSC" "C139797"
+			(at 118.11 74.93 90)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -1625,6 +1697,15 @@
 				(hide yes)
 			)
 		)
+		(property "LCSC" "C139797"
+			(at 85.09 74.93 90)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
 		(pin "1"
 			(uuid "d4bddb68-ce9b-429c-b3f1-383590117c27")
 		)
@@ -1687,6 +1768,15 @@
 			)
 		)
 		(property "Description" "Resistor"
+			(at 134.62 58.42 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "LCSC" "C98220"
 			(at 134.62 58.42 0)
 			(effects
 				(font
